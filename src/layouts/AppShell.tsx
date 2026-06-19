@@ -1,0 +1,286 @@
+import { useState } from 'react'
+import { Link, useLocation, Outlet } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Heart, MessageCircle, Bell, ShoppingBag, Tv, Car,
+  Crown, User, X, LogOut, Zap, Home, Compass, Users
+} from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { Sun, Moon } from 'lucide-react'
+import logoImg from '@/assets/logo.png'
+
+// ─── Nav items ────────────────────────────────────────────────────────────────
+const primaryNav = [
+  { path: '/app/feed',          icon: Home,          label: 'Feed',     badge: null },
+  { path: '/app/discover',      icon: Compass,       label: 'Discover', badge: '🔥' },
+  { path: '/app/chat/1',        icon: MessageCircle, label: 'Chat',     badge: '3' },
+  { path: '/app/notifications', icon: Bell,          label: 'Alerts',   badge: '5' },
+  { path: '/app/profile',       icon: User,          label: 'Me',       badge: null },
+]
+
+const secondaryNav = [
+  { path: '/app/matches',       icon: Heart,         label: 'Matches',   color: 'text-pink-500' },
+  { path: '/app/spin',          icon: Zap,           label: 'Spin',      color: 'text-fuchsia-500' },
+  { path: '/app/groups',        icon: Users,         label: 'Groups',    color: 'text-purple-500' },
+  { path: '/app/marketplace',   icon: ShoppingBag,   label: 'Market',    color: 'text-amber-500' },
+  { path: '/app/smartztv',      icon: Tv,            label: 'SmartzTV',  color: 'text-violet-500' },
+  { path: '/app/ride',          icon: Car,           label: 'Ride',      color: 'text-emerald-500' },
+  { path: '/app/subscriptions', icon: Crown,         label: 'Premium',   color: 'text-yellow-500' },
+]
+
+const allNav = [...primaryNav, ...secondaryNav]
+
+export default function AppShell() {
+  const location  = useLocation()
+  const { signOut, user } = useAuth()
+  const { theme, toggleTheme } = useTheme()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const isActive = (path: string) => location.pathname.startsWith(path)
+  const currentPage = allNav.find(n => isActive(n.path))
+
+  return (
+    <div className="h-screen flex dark:bg-[#0A0710] bg-gray-50 overflow-hidden">
+
+      {/* ── Desktop Sidebar (lg+) ── */}
+      <aside className="hidden lg:flex flex-col w-60 xl:w-64 dark:bg-[#0D0A14] bg-white border-r dark:border-white/6 border-gray-100 flex-shrink-0">
+
+        {/* Logo */}
+        <div className="px-5 py-5 border-b dark:border-white/6 border-gray-100">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <img src={logoImg} alt="SmartzConnect" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
+            <span className="font-display font-bold text-[1.05rem]">
+              <span className="text-gradient-love">Smartz</span>
+              <span className="dark:text-white text-gray-900">Connect</span>
+            </span>
+          </Link>
+        </div>
+
+        {/* Primary nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Main</p>
+          {primaryNav.map(item => {
+            const active = isActive(item.path)
+            const Icon = item.icon
+            return (
+              <Link key={item.path} to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${
+                  active
+                    ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20'
+                    : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'
+                }`}>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-semibold">{item.label}</span>
+                {item.badge && !active && (
+                  <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                    item.badge === '🔥' ? 'text-orange-500' : 'bg-brand-pink text-white min-w-[18px] text-center'
+                  }`}>{item.badge}</span>
+                )}
+              </Link>
+            )
+          })}
+
+          <div className="h-px dark:bg-white/5 bg-gray-100 my-3 mx-1" />
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Explore</p>
+
+          {secondaryNav.map(item => {
+            const active = isActive(item.path)
+            const Icon = item.icon
+            return (
+              <Link key={item.path} to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                  active
+                    ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20'
+                    : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'
+                }`}>
+                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : item.color}`} />
+                <span className="text-sm font-semibold">{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Sidebar footer */}
+        <div className="px-3 py-4 border-t dark:border-white/6 border-gray-100 space-y-1">
+          {/* User info */}
+          <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
+            <div className="w-8 h-8 rounded-full bg-love-gradient flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {user?.email?.[0]?.toUpperCase() ?? 'U'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold dark:text-white text-gray-900 truncate">{user?.email?.split('@')[0] ?? 'User'}</p>
+              <p className="text-[10px] dark:text-gray-500 text-gray-400 truncate">{user?.email ?? ''}</p>
+            </div>
+          </div>
+
+          <button onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-gray-50 hover:text-brand-pink transition-all text-sm font-semibold">
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
+
+          <button onClick={signOut}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-red-500/10 hover:bg-red-50 hover:text-red-400 transition-all text-sm font-semibold">
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Mobile Drawer (< lg) ── */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div key="bd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" />
+            <motion.aside key="drawer"
+              initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="fixed left-0 top-0 bottom-0 w-72 dark:bg-[#0D0A14] bg-white z-50 lg:hidden flex flex-col border-r dark:border-white/6 border-gray-100 shadow-2xl">
+
+              <div className="flex items-center justify-between px-5 py-4 border-b dark:border-white/6 border-gray-100">
+                <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-love-gradient flex items-center justify-center">
+                    <Heart className="w-4 h-4 text-white" fill="white" />
+                  </div>
+                  <span className="font-display font-bold text-base">
+                    <span className="text-gradient-love">Smartz</span>
+                    <span className="dark:text-white text-gray-900">Connect</span>
+                  </span>
+                </Link>
+                <button onClick={() => setDrawerOpen(false)}
+                  className="w-8 h-8 rounded-lg dark:bg-white/5 bg-gray-100 flex items-center justify-center">
+                  <X className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+                </button>
+              </div>
+
+              <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+                <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Main</p>
+                {primaryNav.map(item => {
+                  const active = isActive(item.path)
+                  const Icon = item.icon
+                  return (
+                    <Link key={item.path} to={item.path} onClick={() => setDrawerOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20' : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'}`}>
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm font-semibold">{item.label}</span>
+                      {item.badge && !active && (
+                        <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded-full ${item.badge === '🔥' ? 'text-orange-500' : 'bg-brand-pink text-white'}`}>{item.badge}</span>
+                      )}
+                    </Link>
+                  )
+                })}
+                <div className="h-px dark:bg-white/5 bg-gray-100 my-3 mx-1" />
+                <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Explore</p>
+                {secondaryNav.map(item => {
+                  const active = isActive(item.path)
+                  const Icon = item.icon
+                  return (
+                    <Link key={item.path} to={item.path} onClick={() => setDrawerOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20' : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'}`}>
+                      <Icon className={`w-4 h-4 ${active ? 'text-white' : item.color}`} />
+                      <span className="text-sm font-semibold">{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+
+              <div className="px-3 py-4 border-t dark:border-white/6 border-gray-100 space-y-1">
+                <button onClick={toggleTheme}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl dark:text-gray-400 text-gray-600 hover:text-brand-pink transition-all text-sm font-semibold">
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </button>
+                <button onClick={signOut}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl dark:text-gray-400 text-gray-600 hover:text-red-400 transition-all text-sm font-semibold">
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Main content area ── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Mobile top bar */}
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0 z-10">
+          <button onClick={() => setDrawerOpen(true)}
+            className="w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
+            <div className="flex flex-col gap-1 w-4">
+              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-full" style={{ background: 'currentColor' }} />
+              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-3/4" style={{ background: 'currentColor' }} />
+              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-full" style={{ background: 'currentColor' }} />
+            </div>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-lg bg-love-gradient flex items-center justify-center">
+              <Heart className="w-3 h-3 text-white" fill="white" />
+            </div>
+            <span className="font-display font-bold text-sm">
+              <span className="text-gradient-love">Smartz</span>
+              <span className="dark:text-white text-gray-900">Connect</span>
+            </span>
+            {currentPage && (
+              <span className="text-xs dark:text-gray-500 text-gray-400 ml-1">· {currentPage.label}</span>
+            )}
+          </div>
+
+          <Link to="/app/notifications" className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
+            <Bell className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
+          </Link>
+        </div>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 lg:pb-0">
+          <Outlet />
+        </main>
+
+        {/* ── Mobile Bottom Nav ── */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 dark:bg-[#0D0A14]/98 bg-white/98 backdrop-blur-xl border-t dark:border-white/8 border-gray-100 flex items-center px-1 safe-area-pb">
+          {primaryNav.map(item => {
+            const active = isActive(item.path)
+            const Icon = item.icon
+            return (
+              <Link key={item.path} to={item.path}
+                className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 relative group">
+
+                {/* Active pill background */}
+                {active && (
+                  <motion.div
+                    layoutId="bottomNavPill"
+                    className="absolute inset-x-1 inset-y-1 rounded-xl bg-love-soft"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+
+                <div className={`relative z-10 w-6 h-6 flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
+                  <Icon className={`w-5 h-5 transition-colors duration-200 ${active ? 'text-brand-pink' : 'dark:text-gray-500 text-gray-400'}`} />
+                  {/* Badge */}
+                  {item.badge && item.badge !== '🔥' && !active && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
+                      {item.badge}
+                    </span>
+                  )}
+                  {item.badge === '🔥' && !active && (
+                    <span className="absolute -top-1 -right-1 text-[10px]">🔥</span>
+                  )}
+                </div>
+
+                <span className={`relative z-10 text-[9px] font-bold transition-colors duration-200 ${active ? 'text-brand-pink' : 'dark:text-gray-500 text-gray-400'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+    </div>
+  )
+}

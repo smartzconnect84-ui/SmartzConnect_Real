@@ -1,0 +1,152 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import { AuthProvider } from '@/contexts/AuthContext'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+import LiveChat from '@/components/LiveChat'
+import AppShell from '@/layouts/AppShell'
+import AdminLayout from '@/layouts/AdminLayout'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import HomePage from '@/pages/HomePage'
+import AboutPage from '@/pages/AboutPage'
+import LoginPage           from '@/pages/LoginPage'
+import RegisterPage         from '@/pages/RegisterPage'
+import ForgotPasswordPage   from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage    from '@/pages/ResetPasswordPage'
+import VerifyEmailPage      from '@/pages/VerifyEmailPage'
+import AuthCallbackPage     from '@/pages/AuthCallbackPage'
+import OnboardingPage from '@/pages/OnboardingPage'
+import ProfilePage from '@/pages/ProfilePage'
+import DiscoverPage from '@/pages/DiscoverPage'
+import MatchesPage from '@/pages/MatchesPage'
+import ChatPage from '@/pages/ChatPage'
+import GroupChatPage from '@/pages/GroupChatPage'
+import SpinChatPage from '@/pages/SpinChatPage'
+import FeedPage from '@/pages/FeedPage'
+import NotificationsPage from '@/pages/NotificationsPage'
+import MarketplacePage from '@/pages/MarketplacePage'
+import SmartzTVPage from '@/pages/SmartzTVPage'
+import RidePage from '@/pages/RidePage'
+import SubscriptionsPage from '@/pages/SubscriptionsPage'
+
+// New public service pages
+import SmartzTVPublicPage  from '@/pages/public/SmartzTVPage'
+import SmartzRidePage      from '@/pages/public/SmartzRidePage'
+import SmartzMarketPage    from '@/pages/public/SmartzMarketPage'
+import SmartzDeliveryPage  from '@/pages/public/SmartzDeliveryPage'
+import TeamPage            from '@/pages/public/TeamPage'
+import BlogPage            from '@/pages/public/BlogPage'
+import WorldStagePage      from '@/pages/public/WorldStagePage'
+
+// Admin sub-pages
+import AdminDashboard     from '@/pages/admin/AdminDashboard'
+import AdminUsers         from '@/pages/admin/AdminUsers'
+import AdminSubscriptions from '@/pages/admin/AdminSubscriptions'
+import AdminReports       from '@/pages/admin/AdminReports'
+import AdminAnalytics     from '@/pages/admin/AdminAnalytics'
+import AdminBroadcasts    from '@/pages/admin/AdminBroadcasts'
+import AdminMarketplace   from '@/pages/admin/AdminMarketplace'
+import AdminSmartzTV      from '@/pages/admin/AdminSmartzTV'
+import AdminRides         from '@/pages/admin/AdminRides'
+import AdminContent       from '@/pages/admin/AdminContent'
+import AdminSafety        from '@/pages/admin/AdminSafety'
+import AdminAds           from '@/pages/admin/AdminAds'
+import AdminSettings      from '@/pages/admin/AdminSettings'
+import AdminTeam          from '@/pages/admin/AdminTeam'
+import AdminAuditLogs     from '@/pages/admin/AdminAuditLogs'
+import AdminCEO           from '@/pages/admin/AdminCEO'
+import AdminTour          from '@/pages/admin/AdminTour'
+
+function PublicLayout({ children, showFooter = true }: { children: React.ReactNode; showFooter?: boolean }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+      {showFooter && <Footer />}
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <LiveChat />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/"            element={<PublicLayout><HomePage /></PublicLayout>} />
+            <Route path="/about"       element={<PublicLayout><AboutPage /></PublicLayout>} />
+            {/* ── Auth routes ── */}
+            <Route path="/login"           element={<LoginPage />} />
+            <Route path="/register"        element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password"  element={<ResetPasswordPage />} />
+            <Route path="/verify-email"    element={<VerifyEmailPage />} />
+            <Route path="/auth/callback"   element={<AuthCallbackPage />} />
+            <Route path="/onboarding"  element={<OnboardingPage />} />
+
+            {/* New public service & info pages */}
+            <Route path="/smartztv"       element={<PublicLayout><SmartzTVPublicPage /></PublicLayout>} />
+            <Route path="/smartzride"     element={<PublicLayout><SmartzRidePage /></PublicLayout>} />
+            <Route path="/smartzmarket"   element={<PublicLayout><SmartzMarketPage /></PublicLayout>} />
+            <Route path="/smartzdelivery" element={<PublicLayout><SmartzDeliveryPage /></PublicLayout>} />
+            <Route path="/smartzads"      element={<PublicLayout><SmartzMarketPage /></PublicLayout>} />
+            <Route path="/team"           element={<PublicLayout><TeamPage /></PublicLayout>} />
+            <Route path="/blog"           element={<PublicLayout><BlogPage /></PublicLayout>} />
+            <Route path="/world-stage"    element={<PublicLayout><WorldStagePage /></PublicLayout>} />
+
+            {/* App routes — nested under AppShell (sidebar + bottom nav) */}
+            <Route path="/app" element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/app/feed" replace />} />
+              <Route path="feed"          element={<FeedPage />} />
+              <Route path="discover"      element={<DiscoverPage />} />
+              <Route path="matches"       element={<MatchesPage />} />
+              <Route path="chat/:id"      element={<ChatPage />} />
+              <Route path="groups"        element={<GroupChatPage />} />
+              <Route path="spin"          element={<SpinChatPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="marketplace"   element={<MarketplacePage />} />
+              <Route path="smartztv"      element={<SmartzTVPage />} />
+              <Route path="ride"          element={<RidePage />} />
+              <Route path="subscriptions" element={<SubscriptionsPage />} />
+              <Route path="profile"       element={<ProfilePage />} />
+            </Route>
+
+            {/* Admin Panel — full-screen layout with its own sidebar */}
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index                element={<AdminDashboard />} />
+              <Route path="users"         element={<AdminUsers />} />
+              <Route path="subscriptions" element={<AdminSubscriptions />} />
+              <Route path="reports"       element={<AdminReports />} />
+              <Route path="analytics"     element={<AdminAnalytics />} />
+              <Route path="broadcasts"    element={<AdminBroadcasts />} />
+              <Route path="marketplace"   element={<AdminMarketplace />} />
+              <Route path="smartztv"      element={<AdminSmartzTV />} />
+              <Route path="rides"         element={<AdminRides />} />
+              <Route path="content"       element={<AdminContent />} />
+              <Route path="safety"        element={<AdminSafety />} />
+              <Route path="ads"           element={<AdminAds />} />
+              <Route path="settings"      element={<AdminSettings />} />
+              <Route path="team"          element={<AdminTeam />} />
+              <Route path="audit"         element={<AdminAuditLogs />} />
+              <Route path="ceo"           element={<AdminCEO />} />
+              <Route path="tour"          element={<AdminTour />} />
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
