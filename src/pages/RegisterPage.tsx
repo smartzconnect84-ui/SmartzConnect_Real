@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import logoImg from '@/assets/logo.png'
+import TurnstileWidget from '@/components/TurnstileWidget'
+
+const TURNSTILE_ENABLED = !!import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 const steps = ['Account', 'Profile', 'Done']
 
@@ -27,6 +30,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreed, setAgreed] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 
   const pwStrength = passwordStrength(password)
   const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500']
@@ -151,6 +155,15 @@ export default function RegisterPage() {
                             </div>
                           )}
                         </div>
+                        {/* Turnstile */}
+                        {TURNSTILE_ENABLED && (
+                          <TurnstileWidget
+                            onSuccess={setTurnstileToken}
+                            onError={() => setTurnstileToken(null)}
+                            onExpire={() => setTurnstileToken(null)}
+                          />
+                        )}
+
                         <label className="flex items-start gap-3 cursor-pointer">
                           <div onClick={() => setAgreed(!agreed)}
                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${agreed ? 'bg-brand-pink border-brand-pink' : 'dark:border-white/20 border-gray-300'}`}>
@@ -185,7 +198,7 @@ export default function RegisterPage() {
                       </>
                     )}
 
-                    <button type="submit" disabled={loading || (step === 1 && !agreed)}
+                    <button type="submit" disabled={loading || (step === 1 && (!agreed || (TURNSTILE_ENABLED && !turnstileToken)))}
                       className="w-full py-3.5 rounded-xl bg-love-gradient text-white font-bold text-sm hover:shadow-lg hover:shadow-pink-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : step === 1 ? <><ArrowRight className="w-4 h-4" /> Continue</> : <><Check className="w-4 h-4" /> Create Account</>}
                     </button>

@@ -1,24 +1,32 @@
 const appId = import.meta.env.VITE_ONESIGNAL_APP_ID as string
 
+const PROD_HOSTNAME = 'smartzconnect.com'
+const isProduction = window.location.hostname === PROD_HOSTNAME ||
+  window.location.hostname.endsWith('.' + PROD_HOSTNAME)
+
 export function initOneSignal() {
   if (!appId) {
-    console.warn('⚠️  VITE_ONESIGNAL_APP_ID not set. Push notifications disabled.')
+    return
+  }
+  if (!isProduction) {
     return
   }
 
-  // Load OneSignal SDK
   const script = document.createElement('script')
   script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'
   script.defer = true
   script.onload = () => {
     ;(window as any).OneSignalDeferred = (window as any).OneSignalDeferred || []
     ;(window as any).OneSignalDeferred.push(async (OneSignal: any) => {
-      await OneSignal.init({
-        appId,
-        safari_web_id: `web.onesignal.auto.${appId}`,
-        notifyButton: { enable: false },
-        allowLocalhostAsSecureOrigin: true,
-      })
+      try {
+        await OneSignal.init({
+          appId,
+          safari_web_id: `web.onesignal.auto.${appId}`,
+          notifyButton: { enable: false },
+          allowLocalhostAsSecureOrigin: false,
+        })
+      } catch {
+      }
     })
   }
   document.head.appendChild(script)

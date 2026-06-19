@@ -1,0 +1,3 @@
+- [Dev-only integrations](dev-integrations.md) — OneSignal and Turnstile are production-domain-only; they must check hostname before loading/rendering to keep dev logs clean.
+- [Responsive breakpoint strategy](responsive-strategy.md) — sm=640px for minor tweaks, md=768px for multi-column grids/tablet layout, lg=1024px for full sidebar and desktop layout.
+- [AppShell layout](appshell-layout.md) — icon-only sidebar on md (w-16), full sidebar on lg (w-60+), bottom nav md:hidden, mobile top bar md:hidden.

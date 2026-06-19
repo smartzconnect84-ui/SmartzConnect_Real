@@ -68,7 +68,7 @@ export default function Hero() {
   const StatIcon = slide.stat.icon
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] max-h-[900px] overflow-hidden">
+    <section className="relative w-full h-screen min-h-[560px] max-h-[900px] overflow-hidden">
 
       {/* ── Slides ── */}
       <AnimatePresence mode="sync">
@@ -80,21 +80,18 @@ export default function Hero() {
           transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="absolute inset-0"
         >
-          {/* Background image */}
           <img
             src={slide.image}
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
-          {/* Natural dark overlay for text readability only */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-black/10" />
-          {/* Bottom fade */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/10" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
         </motion.div>
       </AnimatePresence>
 
       {/* ── Content ── */}
-      <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-12 lg:px-20 max-w-7xl mx-auto">
+      <div className="relative z-10 h-full flex flex-col justify-center px-5 sm:px-10 lg:px-20 max-w-7xl mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
@@ -109,42 +106,42 @@ export default function Hero() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm font-semibold mb-6"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-semibold mb-4 sm:mb-6"
             >
               {slide.badge}
             </motion.div>
 
             {/* Headline */}
-            <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-5 whitespace-pre-line drop-shadow-2xl">
+            <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.05] mb-4 sm:mb-5 whitespace-pre-line drop-shadow-2xl">
               {slide.headline}
             </h1>
 
             {/* Sub */}
-            <p className="text-base sm:text-lg text-white/85 leading-relaxed mb-8 max-w-lg drop-shadow-lg">
+            <p className="text-sm sm:text-base lg:text-lg text-white/85 leading-relaxed mb-6 sm:mb-8 max-w-lg drop-shadow-lg">
               {slide.sub}
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
               <Link to={slide.ctaLink}
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-love-gradient text-white font-bold text-sm shadow-2xl shadow-pink-500/40 hover:shadow-pink-500/60 hover:scale-105 transition-all">
-                <Heart className="w-4 h-4" fill="white" />
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-5 sm:px-7 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-love-gradient text-white font-bold text-xs sm:text-sm shadow-2xl shadow-pink-500/40 hover:shadow-pink-500/60 hover:scale-105 transition-all">
+                <Heart className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="white" />
                 {slide.cta}
               </Link>
               <Link to="/about"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/30 text-white font-semibold text-sm hover:bg-white/25 transition-all">
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-5 sm:px-7 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-md border border-white/30 text-white font-semibold text-xs sm:text-sm hover:bg-white/25 transition-all">
                 Learn More
               </Link>
             </div>
 
             {/* Stat pill */}
-            <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-              <div className="w-8 h-8 rounded-xl bg-love-gradient flex items-center justify-center">
-                <StatIcon className="w-4 h-4 text-white" />
+            <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-love-gradient flex items-center justify-center">
+                <StatIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-white" />
               </div>
               <div>
-                <p className="text-white font-black text-lg leading-none">{slide.stat.value}</p>
-                <p className="text-white/70 text-xs">{slide.stat.label}</p>
+                <p className="text-white font-black text-base sm:text-lg leading-none">{slide.stat.value}</p>
+                <p className="text-white/70 text-[10px] sm:text-xs">{slide.stat.label}</p>
               </div>
             </div>
           </motion.div>
@@ -153,25 +150,25 @@ export default function Hero() {
 
       {/* ── Navigation arrows ── */}
       <button onClick={() => { prev(); setIsPlaying(false) }}
-        className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/30 transition-all group">
-        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+        className="absolute left-2 sm:left-4 lg:left-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/30 transition-all group">
+        <ChevronLeft className="w-4 sm:w-5 h-4 sm:h-5 group-hover:-translate-x-0.5 transition-transform" />
       </button>
       <button onClick={() => { next(); setIsPlaying(false) }}
-        className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/30 transition-all group">
-        <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+        className="absolute right-2 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/30 transition-all group">
+        <ChevronRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-0.5 transition-transform" />
       </button>
 
       {/* ── Dot indicators ── */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
         {slides.map((_, i) => (
           <button key={i} onClick={() => { setCurrent(i); setIsPlaying(false) }}
-            className={`transition-all duration-300 rounded-full ${i === current ? 'w-8 h-2.5 bg-white' : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'}`}
+            className={`transition-all duration-300 rounded-full ${i === current ? 'w-6 sm:w-8 h-2 sm:h-2.5 bg-white' : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/40 hover:bg-white/70'}`}
           />
         ))}
       </div>
 
       {/* ── Slide counter ── */}
-      <div className="absolute bottom-8 right-6 z-20 text-white/60 text-xs font-mono">
+      <div className="absolute bottom-6 sm:bottom-8 right-4 sm:right-6 z-20 text-white/60 text-[10px] sm:text-xs font-mono hidden sm:block">
         {String(current + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
       </div>
     </section>

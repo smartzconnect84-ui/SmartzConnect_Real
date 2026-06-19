@@ -8,6 +8,10 @@ interface TurnstileWidgetProps {
 }
 
 const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string
+const PROD_HOSTNAME = 'smartzconnect.com'
+const isProduction = typeof window !== 'undefined' &&
+  (window.location.hostname === PROD_HOSTNAME ||
+   window.location.hostname.endsWith('.' + PROD_HOSTNAME))
 
 export default function TurnstileWidget({
   onSuccess,
@@ -15,7 +19,7 @@ export default function TurnstileWidget({
   onExpire,
   className = '',
 }: TurnstileWidgetProps) {
-  if (!siteKey) {
+  if (!siteKey || !isProduction) {
     return null
   }
 

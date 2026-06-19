@@ -7,10 +7,9 @@ import {
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, Menu } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
 const primaryNav = [
   { path: '/app/feed',          icon: Home,          label: 'Feed',     badge: null },
   { path: '/app/discover',      icon: Compass,       label: 'Discover', badge: '🔥' },
@@ -43,14 +42,15 @@ export default function AppShell() {
   return (
     <div className="h-screen flex dark:bg-[#0A0710] bg-gray-50 overflow-hidden">
 
-      {/* ── Desktop Sidebar (lg+) ── */}
-      <aside className="hidden lg:flex flex-col w-60 xl:w-64 dark:bg-[#0D0A14] bg-white border-r dark:border-white/6 border-gray-100 flex-shrink-0">
+      {/* ── Compact icon sidebar (md) / Full sidebar (lg+) ── */}
+      <aside className="hidden md:flex flex-col dark:bg-[#0D0A14] bg-white border-r dark:border-white/6 border-gray-100 flex-shrink-0
+        w-16 lg:w-60 xl:w-64 transition-all duration-200">
 
         {/* Logo */}
-        <div className="px-5 py-5 border-b dark:border-white/6 border-gray-100">
+        <div className="px-3 lg:px-5 py-4 lg:py-5 border-b dark:border-white/6 border-gray-100 flex items-center justify-center lg:justify-start">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <img src={logoImg} alt="SmartzConnect" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-            <span className="font-display font-bold text-[1.05rem]">
+            <img src={logoImg} alt="SmartzConnect" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
+            <span className="font-display font-bold text-[1.05rem] hidden lg:block">
               <span className="text-gradient-love">Smartz</span>
               <span className="dark:text-white text-gray-900">Connect</span>
             </span>
@@ -58,53 +58,59 @@ export default function AppShell() {
         </div>
 
         {/* Primary nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Main</p>
+        <nav className="flex-1 px-2 lg:px-3 py-4 space-y-0.5 overflow-y-auto">
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-2 lg:px-3 mb-2 hidden lg:block">Main</p>
           {primaryNav.map(item => {
             const active = isActive(item.path)
             const Icon = item.icon
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${
+                title={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-3 py-2.5 rounded-xl transition-all group relative ${
                   active
                     ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20'
                     : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'
                 }`}>
                 <Icon className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm font-semibold">{item.label}</span>
+                <span className="text-sm font-semibold hidden lg:block">{item.label}</span>
                 {item.badge && !active && (
-                  <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                  <span className={`hidden lg:flex ml-auto text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                     item.badge === '🔥' ? 'text-orange-500' : 'bg-brand-pink text-white min-w-[18px] text-center'
                   }`}>{item.badge}</span>
+                )}
+                {/* Small dot badge on icon for md */}
+                {item.badge && item.badge !== '🔥' && !active && (
+                  <span className="lg:hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
                 )}
               </Link>
             )
           })}
 
           <div className="h-px dark:bg-white/5 bg-gray-100 my-3 mx-1" />
-          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-3 mb-2">Explore</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-pink px-2 lg:px-3 mb-2 hidden lg:block">Explore</p>
 
           {secondaryNav.map(item => {
             const active = isActive(item.path)
             const Icon = item.icon
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                title={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-3 py-2.5 rounded-xl transition-all group ${
                   active
                     ? 'bg-love-gradient text-white shadow-md shadow-pink-500/20'
                     : 'dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink'
                 }`}>
                 <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : item.color}`} />
-                <span className="text-sm font-semibold">{item.label}</span>
+                <span className="text-sm font-semibold hidden lg:block">{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
         {/* Sidebar footer */}
-        <div className="px-3 py-4 border-t dark:border-white/6 border-gray-100 space-y-1">
-          {/* User info */}
-          <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
+        <div className="px-2 lg:px-3 py-4 border-t dark:border-white/6 border-gray-100 space-y-1">
+          {/* User info — lg only */}
+          <div className="hidden lg:flex items-center gap-2.5 px-3 py-2 mb-1">
             <div className="w-8 h-8 rounded-full bg-love-gradient flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
               {user?.email?.[0]?.toUpperCase() ?? 'U'}
             </div>
@@ -115,30 +121,32 @@ export default function AppShell() {
           </div>
 
           <button onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-gray-50 hover:text-brand-pink transition-all text-sm font-semibold">
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            className="w-full flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-white/5 hover:bg-gray-50 hover:text-brand-pink transition-all text-sm font-semibold">
+            {theme === 'dark' ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+            <span className="hidden lg:block">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
 
           <button onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-red-500/10 hover:bg-red-50 hover:text-red-400 transition-all text-sm font-semibold">
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            title="Sign Out"
+            className="w-full flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-3 py-2 rounded-xl dark:text-gray-400 text-gray-600 hover:dark:bg-red-500/10 hover:bg-red-50 hover:text-red-400 transition-all text-sm font-semibold">
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden lg:block">Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* ── Mobile Drawer (< lg) ── */}
+      {/* ── Mobile Drawer (< md) ── */}
       <AnimatePresence>
         {drawerOpen && (
           <>
             <motion.div key="bd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setDrawerOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" />
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" />
             <motion.aside key="drawer"
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed left-0 top-0 bottom-0 w-72 dark:bg-[#0D0A14] bg-white z-50 lg:hidden flex flex-col border-r dark:border-white/6 border-gray-100 shadow-2xl">
+              className="fixed left-0 top-0 bottom-0 w-72 dark:bg-[#0D0A14] bg-white z-50 md:hidden flex flex-col border-r dark:border-white/6 border-gray-100 shadow-2xl">
 
               <div className="flex items-center justify-between px-5 py-4 border-b dark:border-white/6 border-gray-100">
                 <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
@@ -207,15 +215,11 @@ export default function AppShell() {
       {/* ── Main content area ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0 z-10">
+        {/* Mobile top bar — only on < md */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0 z-10">
           <button onClick={() => setDrawerOpen(true)}
             className="w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
-            <div className="flex flex-col gap-1 w-4">
-              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-full" style={{ background: 'currentColor' }} />
-              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-3/4" style={{ background: 'currentColor' }} />
-              <span className="h-0.5 bg-current dark:text-gray-300 rounded-full w-full" style={{ background: 'currentColor' }} />
-            </div>
+            <Menu className="w-4 h-4 dark:text-gray-400 text-gray-600" />
           </button>
 
           <div className="flex items-center gap-1.5">
@@ -238,12 +242,12 @@ export default function AppShell() {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 lg:pb-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
           <Outlet />
         </main>
 
-        {/* ── Mobile Bottom Nav ── */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 dark:bg-[#0D0A14]/98 bg-white/98 backdrop-blur-xl border-t dark:border-white/8 border-gray-100 flex items-center px-1 safe-area-pb">
+        {/* ── Mobile Bottom Nav — only on < md ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 dark:bg-[#0D0A14]/98 bg-white/98 backdrop-blur-xl border-t dark:border-white/8 border-gray-100 flex items-center px-1">
           {primaryNav.map(item => {
             const active = isActive(item.path)
             const Icon = item.icon
@@ -251,7 +255,6 @@ export default function AppShell() {
               <Link key={item.path} to={item.path}
                 className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 relative group">
 
-                {/* Active pill background */}
                 {active && (
                   <motion.div
                     layoutId="bottomNavPill"
@@ -262,7 +265,6 @@ export default function AppShell() {
 
                 <div className={`relative z-10 w-6 h-6 flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
                   <Icon className={`w-5 h-5 transition-colors duration-200 ${active ? 'text-brand-pink' : 'dark:text-gray-500 text-gray-400'}`} />
-                  {/* Badge */}
                   {item.badge && item.badge !== '🔥' && !active && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
                       {item.badge}
