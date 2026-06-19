@@ -31,11 +31,11 @@ const footerLinks = {
     { label: 'Contact Us',        href: '#' },
   ],
   Legal: [
-    { label: 'Privacy Policy',    href: '#' },
-    { label: 'Terms of Service',  href: '#' },
-    { label: 'Cookie Policy',     href: '#' },
-    { label: 'GDPR',              href: '#' },
-    { label: 'Accessibility',     href: '#' },
+    { label: 'Privacy Policy',    href: '/privacy' },
+    { label: 'Terms of Service',  href: '/terms' },
+    { label: 'Cookie Policy',     href: '/cookie-policy' },
+    { label: 'GDPR',              href: '/privacy#gdpr' },
+    { label: 'Accessibility',     href: '/about#accessibility' },
   ],
 }
 

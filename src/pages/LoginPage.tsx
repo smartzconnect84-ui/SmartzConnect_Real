@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import TurnstileWidget from '@/components/TurnstileWidget'
 import logoImg from '@/assets/logo.png'
+
+const TURNSTILE_ENABLED = !!import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -14,9 +17,14 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setError('Please complete the security check.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
@@ -128,6 +136,15 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Turnstile */}
+              {TURNSTILE_ENABLED && (
+                <TurnstileWidget
+                  onSuccess={setTurnstileToken}
+                  onError={() => setTurnstileToken(null)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+              )}
 
               {/* Remember me */}
               <label className="flex items-center gap-2.5 cursor-pointer select-none">

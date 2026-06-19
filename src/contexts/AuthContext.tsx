@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { type User, type Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { linkOneSignalUser, unlinkOneSignalUser } from '@/lib/onesignal'
 
 interface AuthContextType {
   user: User | null
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // but we expose the event via a custom DOM event for App.tsx to catch
       if (event === 'SIGNED_IN') {
         window.dispatchEvent(new CustomEvent('supabase:signed_in', { detail: { session } }))
+        if (session?.user?.id) linkOneSignalUser(session.user.id)
       }
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked the reset link in their email — redirect to set new password
@@ -53,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (event === 'SIGNED_OUT') {
         window.dispatchEvent(new CustomEvent('supabase:signed_out'))
+        unlinkOneSignalUser()
       }
     })
 

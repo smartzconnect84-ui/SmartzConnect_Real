@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
   },
   server: {
     host: '0.0.0.0',
@@ -15,5 +16,8 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
     cors: true,
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
   },
 })
