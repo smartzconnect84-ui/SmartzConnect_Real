@@ -1,28 +1,19 @@
-/**
- * AuthCallbackPage — handles the redirect after:
- *   1. Email confirmation (new signup)
- *   2. Password reset link click
- *
- * Supabase appends #access_token=...&type=signup|recovery to the URL.
- * This page reads the hash, exchanges it for a session, then routes accordingly.
- */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart, Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState<'loading' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('Verifying your account...')
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Parse the hash fragment Supabase appends to the redirect URL
       const hash = window.location.hash
       const params = new URLSearchParams(hash.replace('#', '?'))
-      const type = params.get('type') // 'signup' | 'recovery' | 'email_change'
+      const type = params.get('type')
       const errorDesc = params.get('error_description')
 
       if (errorDesc) {
@@ -31,11 +22,9 @@ export default function AuthCallbackPage() {
         return
       }
 
-      // Let Supabase SDK process the hash and establish the session
       const { data: { session }, error } = await supabase.auth.getSession()
 
       if (error || !session) {
-        // Try exchanging the code if present (PKCE flow)
         const code = params.get('code')
         if (code) {
           const { error: exchErr } = await supabase.auth.exchangeCodeForSession(code)
@@ -51,14 +40,14 @@ export default function AuthCallbackPage() {
         }
       }
 
-      // Route based on type
       if (type === 'recovery') {
         setMessage('Link verified! Redirecting to password reset...')
         setTimeout(() => navigate('/reset-password', { replace: true }), 800)
       } else {
-        // signup confirmation or any other type → go to dashboard
-        setMessage('Email confirmed! Taking you to your dashboard... 🎉')
-        setTimeout(() => navigate('/app/feed', { replace: true }), 1200)
+        // New signup — email confirmed
+        setStatus('success')
+        setMessage('Email confirmed! Welcome to SmartzConnect 🎉')
+        setTimeout(() => navigate('/app/feed?welcome=1', { replace: true }), 1500)
       }
     }
 
@@ -67,15 +56,28 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen dark:bg-[#080510] bg-gray-50 flex items-center justify-center p-4">
-      <div className="text-center">
-        <img src={logoImg} alt="SmartzConnect" className="w-10 h-10 object-contain mx-auto mb-6" />
+      <div className="text-center max-w-sm">
+        <img src={logoImg} alt="SmartzConnect" className="w-12 h-12 object-contain mx-auto mb-6" />
 
-        {status === 'loading' ? (
+        {status === 'loading' && (
           <>
-            <div className="w-8 h-8 border-2 border-pink-500/30 border-t-brand-pink rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-2 border-pink-500/30 border-t-brand-pink rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm dark:text-gray-400 text-gray-600 font-medium">{message}</p>
           </>
-        ) : (
+        )}
+
+        {status === 'success' && (
+          <>
+            <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+            <h2 className="font-display font-black text-xl dark:text-white text-gray-900 mb-2">You're verified!</h2>
+            <p className="text-sm dark:text-gray-400 text-gray-600 mb-4">{message}</p>
+            <div className="flex justify-center">
+              <Loader2 className="w-4 h-4 text-brand-pink animate-spin" />
+            </div>
+          </>
+        )}
+
+        {status === 'error' && (
           <>
             <p className="text-red-500 font-semibold mb-2">Something went wrong</p>
             <p className="text-sm dark:text-gray-400 text-gray-600 mb-5">{message}</p>

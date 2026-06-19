@@ -10,11 +10,12 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import HomePage from '@/pages/HomePage'
 import AboutPage from '@/pages/AboutPage'
 import LoginPage           from '@/pages/LoginPage'
-import RegisterPage         from '@/pages/RegisterPage'
-import ForgotPasswordPage   from '@/pages/ForgotPasswordPage'
-import ResetPasswordPage    from '@/pages/ResetPasswordPage'
-import VerifyEmailPage      from '@/pages/VerifyEmailPage'
-import AuthCallbackPage     from '@/pages/AuthCallbackPage'
+import RegisterPage        from '@/pages/RegisterPage'
+import AdminLoginPage      from '@/pages/AdminLoginPage'
+import ForgotPasswordPage  from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage   from '@/pages/ResetPasswordPage'
+import VerifyEmailPage     from '@/pages/VerifyEmailPage'
+import AuthCallbackPage    from '@/pages/AuthCallbackPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import ProfilePage from '@/pages/ProfilePage'
 import DiscoverPage from '@/pages/DiscoverPage'
@@ -29,16 +30,15 @@ import SmartzTVPage from '@/pages/SmartzTVPage'
 import RidePage from '@/pages/RidePage'
 import SubscriptionsPage from '@/pages/SubscriptionsPage'
 
-// New public service pages
 import SmartzTVPublicPage  from '@/pages/public/SmartzTVPage'
 import SmartzRidePage      from '@/pages/public/SmartzRidePage'
 import SmartzMarketPage    from '@/pages/public/SmartzMarketPage'
 import SmartzDeliveryPage  from '@/pages/public/SmartzDeliveryPage'
+import SmartzAdsPage       from '@/pages/public/SmartzAdsPage'
 import TeamPage            from '@/pages/public/TeamPage'
 import BlogPage            from '@/pages/public/BlogPage'
 import WorldStagePage      from '@/pages/public/WorldStagePage'
 
-// Admin sub-pages
 import AdminDashboard     from '@/pages/admin/AdminDashboard'
 import AdminUsers         from '@/pages/admin/AdminUsers'
 import AdminSubscriptions from '@/pages/admin/AdminSubscriptions'
@@ -77,26 +77,28 @@ export default function App() {
             {/* Public routes */}
             <Route path="/"            element={<PublicLayout><HomePage /></PublicLayout>} />
             <Route path="/about"       element={<PublicLayout><AboutPage /></PublicLayout>} />
-            {/* ── Auth routes ── */}
+
+            {/* Auth routes */}
             <Route path="/login"           element={<LoginPage />} />
             <Route path="/register"        element={<RegisterPage />} />
+            <Route path="/admin/login"     element={<AdminLoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password"  element={<ResetPasswordPage />} />
             <Route path="/verify-email"    element={<VerifyEmailPage />} />
             <Route path="/auth/callback"   element={<AuthCallbackPage />} />
-            <Route path="/onboarding"  element={<OnboardingPage />} />
+            <Route path="/onboarding"      element={<OnboardingPage />} />
 
-            {/* New public service & info pages */}
+            {/* Public service & info pages */}
             <Route path="/smartztv"       element={<PublicLayout><SmartzTVPublicPage /></PublicLayout>} />
             <Route path="/smartzride"     element={<PublicLayout><SmartzRidePage /></PublicLayout>} />
             <Route path="/smartzmarket"   element={<PublicLayout><SmartzMarketPage /></PublicLayout>} />
             <Route path="/smartzdelivery" element={<PublicLayout><SmartzDeliveryPage /></PublicLayout>} />
-            <Route path="/smartzads"      element={<PublicLayout><SmartzMarketPage /></PublicLayout>} />
+            <Route path="/smartzads"      element={<PublicLayout><SmartzAdsPage /></PublicLayout>} />
             <Route path="/team"           element={<PublicLayout><TeamPage /></PublicLayout>} />
             <Route path="/blog"           element={<PublicLayout><BlogPage /></PublicLayout>} />
             <Route path="/world-stage"    element={<PublicLayout><WorldStagePage /></PublicLayout>} />
 
-            {/* App routes — nested under AppShell (sidebar + bottom nav) */}
+            {/* App routes — nested under AppShell */}
             <Route path="/app" element={
               <ProtectedRoute>
                 <AppShell />
@@ -117,7 +119,7 @@ export default function App() {
               <Route path="profile"       element={<ProfilePage />} />
             </Route>
 
-            {/* Admin Panel — full-screen layout with its own sidebar */}
+            {/* Admin Panel */}
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminLayout />

@@ -1,16 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import logoImg from '@/assets/logo.png'
-
-const socialProof = [
-  { v: '2M+', l: 'Active Users' },
-  { v: '47', l: 'Countries' },
-  { v: '4.9★', l: 'App Rating' },
-  { v: '98%', l: 'Match Rate' },
-]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -18,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -42,46 +36,53 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen dark:bg-[#080510] bg-gray-50 flex">
       {/* Left panel — desktop only */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-love-gradient p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-600/80 to-purple-700/80" />
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
+      <div className="hidden lg:flex flex-col justify-between w-[45%] relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}>
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-white/3 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/3 blur-3xl" />
 
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex items-center gap-3 p-12">
           <img src={logoImg} alt="SmartzConnect" className="w-10 h-10 object-contain" />
           <span className="font-display font-black text-xl text-white">SmartzConnect</span>
         </div>
 
-        <div className="relative">
+        <div className="relative p-12">
           <h2 className="font-display font-black text-4xl text-white mb-4 leading-tight">
             Africa's #1<br />Social Platform
           </h2>
-          <p className="text-white/70 text-base mb-8 leading-relaxed">
+          <p className="text-white/60 text-base mb-8 leading-relaxed">
             Connect, date, stream, shop, and ride — all in one app built for Africa.
           </p>
           <div className="grid grid-cols-2 gap-3">
-            {socialProof.map(s => (
-              <div key={s.l} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15">
-                <p className="font-display font-black text-2xl text-white">{s.v}</p>
-                <p className="text-white/60 text-xs mt-0.5">{s.l}</p>
+            {[
+              { v: 'Social', l: 'Connections' },
+              { v: 'Streaming', l: 'SmartzTV' },
+              { v: 'Shopping', l: 'SmartzMarket' },
+              { v: 'Rides', l: 'SmartzRide' },
+            ].map(s => (
+              <div key={s.l} className="bg-white/8 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <p className="font-display font-black text-xl text-white">{s.v}</p>
+                <p className="text-white/50 text-xs mt-0.5">{s.l}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative">
-          <div className="flex -space-x-3 mb-3">
-            {['👩🏾', '👨🏿', '👩🏽', '👨🏾', '👩🏿'].map((e, i) => (
-              <div key={i} className="w-9 h-9 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-lg">{e}</div>
-            ))}
-          </div>
-          <p className="text-white/70 text-sm">Join <span className="text-white font-bold">2 million+</span> Africans already connected</p>
+        <div className="relative p-12">
+          <p className="text-white/50 text-sm">Connecting Africa, one community at a time.</p>
         </div>
       </div>
 
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md">
+          {/* Back to website */}
+          <div className="mb-6">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-xs dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to website
+            </Link>
+          </div>
+
           {/* Mobile logo */}
           <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
             <img src={logoImg} alt="SmartzConnect" className="w-10 h-10 object-contain" />
@@ -128,28 +129,35 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {/* Remember me */}
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <div
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${rememberMe ? 'bg-brand-pink border-brand-pink' : 'dark:border-white/20 border-gray-300'}`}
+                >
+                  {rememberMe && (
+                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-xs dark:text-gray-400 text-gray-600">Remember me</span>
+              </label>
+
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-love-gradient text-white font-bold text-sm hover:shadow-lg hover:shadow-pink-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ArrowRight className="w-4 h-4" /> Sign In</>}
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t dark:border-white/8 border-gray-200" /></div>
-              <div className="relative flex justify-center"><span className="px-3 dark:bg-[#080510] bg-gray-50 text-xs dark:text-gray-500 text-gray-400">or continue with</span></div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[{ emoji: '🇬', label: 'Google' }, { emoji: '📘', label: 'Facebook' }].map(p => (
-                <button key={p.label} className="flex items-center justify-center gap-2 py-3 rounded-xl dark:bg-white/5 bg-white border dark:border-white/8 border-gray-200 dark:text-gray-300 text-gray-700 text-sm font-semibold hover:border-brand-pink transition-colors">
-                  <span>{p.emoji}</span> {p.label}
-                </button>
-              ))}
-            </div>
-
             <p className="text-center mt-6 text-sm dark:text-gray-400 text-gray-600">
               Don't have an account?{' '}
               <Link to="/register" className="text-brand-pink font-bold hover:underline">Sign up free</Link>
+            </p>
+
+            <p className="text-center mt-3 text-xs dark:text-gray-500 text-gray-400">
+              Admin?{' '}
+              <Link to="/admin/login" className="text-brand-pink hover:underline">Admin login →</Link>
             </p>
           </motion.div>
         </div>

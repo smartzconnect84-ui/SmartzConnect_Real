@@ -8,21 +8,19 @@ const slides = [
     image: '/hero-friends.jpg',
     badge: '🌍 Africa\'s #1 Social Platform',
     headline: 'Where Friendships\nBecome Forever',
-    sub: 'Join millions of Africans building real connections, sharing moments, and creating memories that last a lifetime.',
+    sub: 'Join Africans building real connections, sharing moments, and creating memories that last a lifetime.',
     cta: 'Find Your People',
     ctaLink: '/register',
-    accent: 'from-pink-600/70 via-purple-900/60 to-black/80',
-    stat: { icon: Users, value: '2.4M+', label: 'Active Friends' },
+    stat: { icon: Users, value: 'Growing', label: 'Community' },
   },
   {
     image: '/hero-date.jpg',
     badge: '💕 Smart Matching Technology',
     headline: 'Your Perfect Match\nIs Waiting',
-    sub: 'Our AI-powered matching engine analyses 50+ compatibility factors to connect you with someone truly special.',
+    sub: 'Our AI-powered matching engine analyses compatibility factors to connect you with someone truly special.',
     cta: 'Start Matching',
     ctaLink: '/register',
-    accent: 'from-rose-700/70 via-pink-900/60 to-black/80',
-    stat: { icon: Heart, value: '180K+', label: 'Couples Matched' },
+    stat: { icon: Heart, value: 'Daily', label: 'New Matches' },
   },
   {
     image: '/hero-couple.jpg',
@@ -31,7 +29,6 @@ const slides = [
     sub: 'From Monrovia to Lagos, Nairobi to Accra — SmartzConnect is where African love stories begin and flourish.',
     cta: 'Join Free Today',
     ctaLink: '/register',
-    accent: 'from-fuchsia-700/70 via-purple-900/60 to-black/80',
     stat: { icon: Star, value: '4.9★', label: 'App Rating' },
   },
   {
@@ -41,8 +38,7 @@ const slides = [
     sub: 'Share your life, discover trending content, go live on SmartzTV, and stay connected with your community 24/7.',
     cta: 'Explore the Feed',
     ctaLink: '/register',
-    accent: 'from-violet-700/70 via-indigo-900/60 to-black/80',
-    stat: { icon: Play, value: '50K+', label: 'Daily Live Streams' },
+    stat: { icon: Play, value: 'Live', label: 'Streaming Now' },
   },
   {
     image: '/hero-networking.jpg',
@@ -51,8 +47,7 @@ const slides = [
     sub: 'Build your professional network, discover opportunities, and collaborate with Africa\'s brightest minds on one platform.',
     cta: 'Build Your Network',
     ctaLink: '/register',
-    accent: 'from-emerald-700/70 via-teal-900/60 to-black/80',
-    stat: { icon: MapPin, value: '47', label: 'Countries' },
+    stat: { icon: MapPin, value: '47+', label: 'Countries' },
   },
 ]
 
@@ -91,10 +86,10 @@ export default function Hero() {
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
-          {/* Gradient overlay */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${slide.accent}`} />
+          {/* Natural dark overlay for text readability only */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-black/10" />
           {/* Bottom fade */}
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
         </motion.div>
       </AnimatePresence>
 
@@ -179,31 +174,6 @@ export default function Hero() {
       <div className="absolute bottom-8 right-6 z-20 text-white/60 text-xs font-mono">
         {String(current + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
       </div>
-
-      {/* ── Floating social proof ── */}
-      <motion.div
-        initial={{ opacity: 0, x: 40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1, duration: 0.6 }}
-        className="absolute top-1/3 right-6 sm:right-10 z-20 hidden sm:flex flex-col gap-3"
-      >
-        {[
-          { emoji: '💕', text: 'New match!', sub: 'Amara & Kofi' },
-          { emoji: '🎉', text: 'Just joined', sub: '2,847 today' },
-        ].map((n, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2 + i * 0.2 }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 text-white">
-            <span className="text-xl">{n.emoji}</span>
-            <div>
-              <p className="text-xs font-bold leading-none">{n.text}</p>
-              <p className="text-[10px] text-white/70 mt-0.5">{n.sub}</p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
     </section>
   )
 }

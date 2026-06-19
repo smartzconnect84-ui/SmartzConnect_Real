@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import logoImg from '@/assets/logo.png'
 
@@ -39,7 +39,6 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await signUp(email, password, name)
-      // Redirect to verify-email page — user must confirm before accessing app
       navigate('/verify-email', { state: { email }, replace: true })
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.')
@@ -51,11 +50,21 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen dark:bg-[#080510] bg-gray-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-purple-500/5 pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-pink-500/4 blur-3xl" />
+      </div>
 
       <div className="w-full max-w-md relative">
+        {/* Back to website */}
+        <div className="mb-4">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-xs dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to website
+          </Link>
+        </div>
+
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6">
           <img src={logoImg} alt="SmartzConnect" className="w-10 h-10 object-contain" />
           <span className="font-display font-black text-xl">
             <span className="text-gradient-love">Smartz</span>
@@ -64,7 +73,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Progress steps */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-black transition-all ${i + 1 < step ? 'bg-emerald-500 text-white' : i + 1 === step ? 'bg-love-gradient text-white shadow-md shadow-pink-500/30' : 'dark:bg-white/8 bg-gray-200 dark:text-gray-500 text-gray-400'}`}>
@@ -87,8 +96,8 @@ export default function RegisterPage() {
                     className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-emerald-500/30">
                     <Check className="w-10 h-10 text-white" />
                   </motion.div>
-                  <h2 className="font-display font-black text-2xl dark:text-white text-gray-900 mb-2">You're in! 🎉</h2>
-                  <p className="dark:text-gray-400 text-gray-600 text-sm">Setting up your profile...</p>
+                  <h2 className="font-display font-black text-2xl dark:text-white text-gray-900 mb-2">Account created! 🎉</h2>
+                  <p className="dark:text-gray-400 text-gray-600 text-sm">Check your email to verify your account.</p>
                   <div className="mt-4 flex justify-center">
                     <Loader2 className="w-5 h-5 text-brand-pink animate-spin" />
                   </div>
@@ -99,7 +108,7 @@ export default function RegisterPage() {
                     {step === 1 ? 'Create Account' : 'Your Profile'}
                   </h2>
                   <p className="text-sm dark:text-gray-400 text-gray-600 mb-6">
-                    {step === 1 ? 'Join 2M+ Africans on SmartzConnect' : 'Tell us a bit about yourself'}
+                    {step === 1 ? 'Join the SmartzConnect community' : 'Tell us a bit about yourself'}
                   </p>
 
                   {error && (
@@ -170,7 +179,7 @@ export default function RegisterPage() {
                         </div>
                         <div className="p-4 rounded-2xl bg-love-soft border border-pink-500/20">
                           <p className="text-xs dark:text-gray-300 text-gray-700 leading-relaxed">
-                            🎉 Almost there! After signing up, we'll help you set up your full profile with photos, interests, and more.
+                            🎉 Almost there! After signing up, we'll send you a confirmation email. Click the link to activate your account.
                           </p>
                         </div>
                       </>
