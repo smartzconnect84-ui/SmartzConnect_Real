@@ -79,10 +79,22 @@ export default function BlogPage() {
   })
 
   return (
-    <div className="dark:bg-[#080510] bg-gray-50 min-h-screen pt-20">
+    <div className="dark:bg-[#080510] bg-gray-50 min-h-screen">
+
+      {/* ── Subscription Flyers ── */}
+      <section className="pt-20 pb-0 dark:bg-[#080510] bg-gray-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
+          <div className="rounded-2xl overflow-hidden shadow-xl border dark:border-white/8 border-gray-200 group cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all">
+            <img src="/flyer-ordinary.png" alt="SmartzConnect Ordinary Plan" className="w-full h-auto object-cover" />
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-xl border-2 border-amber-500/40 group cursor-pointer hover:shadow-2xl hover:shadow-amber-500/20 hover:scale-[1.01] transition-all">
+            <img src="/flyer-vip.png" alt="SmartzConnect VIP Plan" className="w-full h-auto object-cover" />
+          </div>
+        </div>
+      </section>
 
       {/* Hero with flyer */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden mt-6">
         <div className="relative h-56 sm:h-72 lg:h-80">
           <img src="/flyer.png" alt="SmartzConnect" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/80" />

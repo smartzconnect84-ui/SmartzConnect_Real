@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Crown, Heart, Zap, X, Phone, CreditCard, Shield, Star, ChevronRight, Gift } from 'lucide-react'
+import CurrencyConverter from '@/components/CurrencyConverter'
 
 const plans = [
   {
@@ -282,6 +283,9 @@ export default function SubscriptionsPage() {
             ))}
           </div>
         </div>
+
+        {/* Currency Converter */}
+        <CurrencyConverter />
 
         {/* Payment methods */}
         <div className="dark:bg-[#130E1E] bg-white rounded-2xl p-5 border dark:border-white/6 border-gray-100">

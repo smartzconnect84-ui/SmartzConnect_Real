@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Camera, Edit3, Save, X, MapPin, Briefcase, GraduationCap, Heart, Shield, Crown, Star, Image, Settings, Bell, Lock, LogOut, ChevronRight, Check } from 'lucide-react'
+import { Camera, Edit3, Save, X, MapPin, Briefcase, GraduationCap, Heart, Shield, Crown, Star, Image, Settings, Bell, Lock, LogOut, ChevronRight, Check, Upload, Flag } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 
 const interestOptions = [
   'Music', 'Travel', 'Cooking', 'Art', 'Tech', 'Fitness', 'Fashion', 'Gaming',
@@ -32,6 +33,45 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false)
   const [interests, setInterests] = useState(['Music', 'Travel', 'Art', 'Cooking', 'Tech', 'Fashion'])
   const [saved, setSaved] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [userPhotos, setUserPhotos] = useState<string[]>([])
+  const [reportOpen, setReportOpen] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `avatars/${user.id}.${ext}`
+      const { error } = await supabase.storage.from('user-uploads').upload(path, file, { upsert: true })
+      if (!error) {
+        const { data } = supabase.storage.from('user-uploads').getPublicUrl(path)
+        setAvatarUrl(data.publicUrl + '?t=' + Date.now())
+      }
+    } catch {}
+    setUploading(false)
+  }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setPhotoUploading(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `photos/${user.id}/${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('user-uploads').upload(path, file, { upsert: false })
+      if (!error) {
+        const { data } = supabase.storage.from('user-uploads').getPublicUrl(path)
+        setUserPhotos(prev => [...prev, data.publicUrl])
+      }
+    } catch {}
+    setPhotoUploading(false)
+  }
 
   const displayName = (user as any)?.name || user?.email?.split('@')[0] || 'Amara Kollie'
   const [form, setForm] = useState({
@@ -117,11 +157,16 @@ export default function ProfilePage() {
             {/* Avatar + name */}
             <div className="dark:bg-[#130E1E] bg-white rounded-2xl p-5 border dark:border-white/6 border-gray-100 flex items-center gap-4">
               <div className="relative flex-shrink-0">
-                <div className="w-20 h-20 rounded-2xl bg-love-gradient flex items-center justify-center text-4xl shadow-lg shadow-pink-500/20">
-                  👩🏾
+                <div className="w-20 h-20 rounded-2xl bg-love-gradient flex items-center justify-center text-4xl shadow-lg shadow-pink-500/20 overflow-hidden">
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    : <span>👩🏾</span>
+                  }
                 </div>
-                <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-love-gradient flex items-center justify-center shadow-md">
-                  <Camera className="w-3.5 h-3.5 text-white" />
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                <button onClick={() => avatarInputRef.current?.click()} disabled={uploading}
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-love-gradient flex items-center justify-center shadow-md disabled:opacity-50">
+                  {uploading ? <div className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
                 </button>
               </div>
               <div className="flex-1 min-w-0">
@@ -239,9 +284,26 @@ export default function ProfilePage() {
                   )}
                 </motion.div>
               ))}
-              <div className="aspect-square dark:bg-white/5 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed dark:border-white/10 border-gray-300 cursor-pointer hover:border-brand-pink transition-all group">
-                <Image className="w-6 h-6 dark:text-gray-600 text-gray-400 mb-1 group-hover:text-brand-pink transition-colors" />
-                <span className="text-[10px] dark:text-gray-500 text-gray-400 group-hover:text-brand-pink transition-colors">Add Photo</span>
+              {userPhotos.map((url, i) => (
+                <motion.div key={url} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                  className="aspect-square rounded-2xl overflow-hidden border dark:border-white/6 border-gray-100 group relative">
+                  <img src={url} alt={`Photo ${i}`} className="w-full h-full object-cover" />
+                  <button onClick={() => setUserPhotos(prev => prev.filter(u => u !== url))}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </motion.div>
+              ))}
+              <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              <div onClick={() => photoInputRef.current?.click()}
+                className="aspect-square dark:bg-white/5 bg-gray-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed dark:border-white/10 border-gray-300 cursor-pointer hover:border-brand-pink transition-all group">
+                {photoUploading
+                  ? <div className="w-5 h-5 border-2 border-brand-pink/40 border-t-brand-pink rounded-full animate-spin" />
+                  : <>
+                      <Upload className="w-6 h-6 dark:text-gray-600 text-gray-400 mb-1 group-hover:text-brand-pink transition-colors" />
+                      <span className="text-[10px] dark:text-gray-500 text-gray-400 group-hover:text-brand-pink transition-colors">Upload Photo</span>
+                    </>
+                }
               </div>
             </div>
             <p className="text-xs dark:text-gray-500 text-gray-400 mt-3 text-center">Tap a photo to set as main or remove it</p>

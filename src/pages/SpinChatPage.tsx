@@ -23,6 +23,7 @@ export default function SpinChatPage() {
   const [spinCount, setSpinCount] = useState(0)
   const [messages, setMessages] = useState<{ text: string; mine: boolean; time: string }[]>([])
   const [input, setInput] = useState('')
+  const [anonymous, setAnonymous] = useState(false)
   const controls = useAnimation()
 
   const spin = async () => {
@@ -64,8 +65,12 @@ export default function SpinChatPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs dark:text-gray-400 text-gray-500 bg-fuchsia-500/10 text-fuchsia-500 px-2.5 py-1 rounded-full font-semibold">{spinCount} spins</span>
+          <button onClick={() => setAnonymous(a => !a)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${anonymous ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 dark:border-white/8 border-gray-200'}`}>
+            👤 {anonymous ? 'Anonymous ON' : 'Go Anonymous'}
+          </button>
           <div className="flex items-center gap-1 text-xs dark:text-gray-400 text-gray-500">
-            <Shield className="w-3.5 h-3.5 text-emerald-500" /> Safe Mode
+            <Shield className="w-3.5 h-3.5 text-emerald-500" /> Safe
           </div>
         </div>
       </div>
@@ -180,9 +185,14 @@ export default function SpinChatPage() {
             <motion.div key="chatting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full">
               {/* Chat header */}
               <div className="flex items-center gap-3 px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0">
-                <div className="w-10 h-10 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-xl">{currentProfile.emoji}</div>
+                <div className="w-10 h-10 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-xl">
+                  {anonymous ? '🎭' : currentProfile.emoji}
+                </div>
                 <div className="flex-1">
-                  <p className="font-bold text-sm dark:text-white text-gray-900">{currentProfile.name}</p>
+                  <p className="font-bold text-sm dark:text-white text-gray-900">
+                    {anonymous ? 'Anonymous User' : currentProfile.name}
+                    {anonymous && <span className="ml-2 text-[10px] font-semibold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full">ANON</span>}
+                  </p>
                   <p className="text-xs text-emerald-500">🟢 Online · Spin match</p>
                 </div>
                 <button onClick={reset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl dark:bg-white/5 bg-gray-100 text-xs font-semibold dark:text-gray-400 text-gray-600 hover:text-brand-pink transition-colors">

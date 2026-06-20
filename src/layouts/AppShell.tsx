@@ -237,10 +237,23 @@ export default function AppShell() {
             )}
           </div>
 
-          <Link to="/app/notifications" className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
-            <Bell className="w-4 h-4 dark:text-gray-400 text-gray-600" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
-          </Link>
+          <div className="flex items-center gap-1.5">
+            {dismissed && (
+              <button
+                onClick={() => { setOpen(true); setDismissed(false); setUnreadCount(0) }}
+                title="Open support chat"
+                className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-pink-500/10 transition-colors">
+                <MessageCircle className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">{unreadCount}</span>
+                )}
+              </button>
+            )}
+            <Link to="/app/notifications" className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
+              <Bell className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
+            </Link>
+          </div>
         </div>
 
         {/* Page content */}

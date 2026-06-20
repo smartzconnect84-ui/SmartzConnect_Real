@@ -1,3 +1,4 @@
 - [Dev-only integrations](dev-integrations.md) — OneSignal and Turnstile are production-domain-only; they must check hostname before loading/rendering to keep dev logs clean.
 - [Responsive breakpoint strategy](responsive-strategy.md) — sm=640px for minor tweaks, md=768px for multi-column grids/tablet layout, lg=1024px for full sidebar and desktop layout.
 - [AppShell layout](appshell-layout.md) — icon-only sidebar on md (w-16), full sidebar on lg (w-60+), bottom nav md:hidden, mobile top bar md:hidden.
+- [Enhancement pass v1](enhancements-v1.md) — Global 90% font scale, hero mobile zoom, CEO static hardcode, flyers on Blog/Ads, file upload via Supabase storage, CurrencyConverter, ReportBlockModal, anonymous spin chat, admin sidebar reordered by importance, schema_v3.sql.

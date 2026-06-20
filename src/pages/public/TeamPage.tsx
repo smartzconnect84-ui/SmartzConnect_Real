@@ -67,7 +67,19 @@ export default function TeamPage() {
 
   useEffect(() => { fetchTeam() }, [])
 
-  const leadership = team.filter(m => !m.is_advisor)
+  const CEO_STATIC: TeamMember = {
+    id: 'ceo-static',
+    name: 'Shedrick K. Nungehn',
+    role: 'Founder & CEO',
+    photo: '/ceo-shedrick.jpg',
+    country: 'Liberia 🇱🇷',
+    bio: 'Visionary entrepreneur and founder of SmartzConnect — Africa\'s #1 social and dating platform. Born and raised in Liberia, Shedrick built SmartzConnect to connect Africans across the world through technology, love, and community.',
+    skills: ['Leadership', 'Product Vision', 'Strategy', 'Technology', 'African Markets'],
+    linkedin: 'https://wa.me/231776679963',
+    is_advisor: false,
+  }
+
+  const leadership = [CEO_STATIC, ...team.filter(m => !m.is_advisor)]
   const advisors = team.filter(m => m.is_advisor)
 
   return (
@@ -150,7 +162,7 @@ export default function TeamPage() {
         )}
 
         {/* ── Leadership Team ── */}
-        {!loading && dbConnected && leadership.length > 0 && (
+        {!loading && leadership.length > 0 && (
           <div className="mb-16 sm:mb-20">
             <div className="flex items-end justify-between mb-8">
               <div>
