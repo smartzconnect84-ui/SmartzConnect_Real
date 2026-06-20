@@ -4,10 +4,12 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { StreamProvider } from '@/contexts/StreamContext'
 import { LiveChatProvider } from '@/contexts/LiveChatContext'
+import { JitsiCallProvider } from '@/contexts/JitsiCallContext'
 import { initOneSignal } from '@/lib/onesignal'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import LiveChat from '@/components/LiveChat'
+import JitsiCall from '@/components/JitsiCall'
 import CookieBanner from '@/components/CookieBanner'
 import AppShell from '@/layouts/AppShell'
 import AdminLayout from '@/layouts/AdminLayout'
@@ -90,9 +92,11 @@ export default function App() {
       <AuthProvider>
         <StreamProvider>
           <LiveChatProvider>
+          <JitsiCallProvider>
           <BrowserRouter>
             <AppInit />
             <LiveChat />
+            <JitsiCall />
             <CookieBanner />
             <Routes>
               {/* Public */}
@@ -171,6 +175,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          </JitsiCallProvider>
           </LiveChatProvider>
         </StreamProvider>
       </AuthProvider>

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile } from 'lucide-react'
+import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile, Phone, Video } from 'lucide-react'
+import { useJitsiCall } from '@/contexts/JitsiCallContext'
 
 const profiles = [
   { name: 'Amara K.',   age: 24, emoji: '👩🏾', country: 'Sierra Leone', flag: '🇸🇱', interests: ['Music', 'Travel', 'Food'],    bio: 'Love exploring new cultures and meeting amazing people! 🌍', online: true  },
@@ -25,6 +26,18 @@ export default function SpinChatPage() {
   const [input, setInput] = useState('')
   const [anonymous, setAnonymous] = useState(false)
   const controls = useAnimation()
+  const { startCall } = useJitsiCall()
+
+  const handleSpinCall = (type: 'video' | 'audio') => {
+    if (!currentProfile) return
+    const roomId = `SmartzConnect-spin-${type}-${Date.now()}`
+    startCall({
+      roomId,
+      type,
+      participantName: anonymous ? 'Anonymous Match' : currentProfile.name,
+      participantEmoji: anonymous ? '🎭' : currentProfile.emoji,
+    })
+  }
 
   const spin = async () => {
     setPhase('spinning')
@@ -195,9 +208,25 @@ export default function SpinChatPage() {
                   </p>
                   <p className="text-xs text-emerald-500">🟢 Online · Spin match</p>
                 </div>
-                <button onClick={reset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl dark:bg-white/5 bg-gray-100 text-xs font-semibold dark:text-gray-400 text-gray-600 hover:text-brand-pink transition-colors">
-                  <RefreshCw className="w-3.5 h-3.5" /> New Spin
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleSpinCall('audio')}
+                    className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-emerald-500/20 hover:text-emerald-500 transition-colors"
+                    title="Voice call"
+                  >
+                    <Phone className="w-3.5 h-3.5 dark:text-gray-400 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handleSpinCall('video')}
+                    className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-fuchsia-500/20 hover:text-fuchsia-500 transition-colors"
+                    title="Video call"
+                  >
+                    <Video className="w-3.5 h-3.5 dark:text-gray-400 text-gray-600" />
+                  </button>
+                  <button onClick={reset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl dark:bg-white/5 bg-gray-100 text-xs font-semibold dark:text-gray-400 text-gray-600 hover:text-brand-pink transition-colors">
+                    <RefreshCw className="w-3.5 h-3.5" /> New Spin
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}

@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Phone, Video, MoreVertical, Send, Smile, Paperclip,
-  Mic, Image, Heart, ThumbsUp, Laugh, Check, CheckCheck, Play, Database
+  Mic, Image, Heart, ThumbsUp, Laugh, Check, CheckCheck, Play, Database, Flag
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useJitsiCall } from '@/contexts/JitsiCallContext'
+import ReportBlockModal from '@/components/ReportBlockModal'
 
 interface Message {
   id: string; text: string; time: string; mine: boolean
@@ -32,7 +34,25 @@ export default function ChatPage() {
   const [showReactions, setShowReactions] = useState<string | null>(null)
   const [showEmoji, setShowEmoji] = useState(false)
   const [sending, setSending] = useState(false)
+  const [showReport, setShowReport] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const { startCall } = useJitsiCall()
+
+  const makeRoomId = (type: 'video' | 'audio') => {
+    const sorted = [user?.id || 'a', id || 'b'].sort().join('-')
+    return `SmartzConnect-${type}-${sorted}`.replace(/[^a-zA-Z0-9-]/g, '')
+  }
+
+  const handleCall = (type: 'video' | 'audio') => {
+    startCall({
+      roomId: makeRoomId(type),
+      type,
+      participantName: participant?.name || 'User',
+      participantEmoji: participant?.emoji,
+      participantAvatar: participant?.avatar_url,
+    })
+  }
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -141,17 +161,58 @@ export default function ChatPage() {
         </div>
 
         <div className="flex gap-1.5">
-          <button className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:text-brand-pink transition-colors">
+          <button
+            onClick={() => handleCall('audio')}
+            className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-emerald-500/20 hover:text-emerald-500 transition-colors"
+            title="Voice call"
+          >
             <Phone className="w-4 h-4 dark:text-gray-400 text-gray-600" />
           </button>
-          <button className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:text-brand-pink transition-colors">
+          <button
+            onClick={() => handleCall('video')}
+            className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-brand-pink/20 hover:text-brand-pink transition-colors"
+            title="Video call"
+          >
             <Video className="w-4 h-4 dark:text-gray-400 text-gray-600" />
           </button>
-          <button className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:text-brand-pink transition-colors">
-            <MoreVertical className="w-4 h-4 dark:text-gray-400 text-gray-600" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(m => !m)}
+              className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:text-brand-pink transition-colors"
+            >
+              <MoreVertical className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+            </button>
+            <AnimatePresence>
+              {showMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                  className="absolute top-10 right-0 z-20 dark:bg-[#1A1228] bg-white rounded-2xl shadow-xl border dark:border-white/8 border-gray-100 overflow-hidden min-w-[140px]"
+                  onClick={() => setShowMenu(false)}
+                >
+                  <button
+                    onClick={() => setShowReport(true)}
+                    className="flex items-center gap-2.5 w-full px-4 py-3 text-sm text-red-500 hover:dark:bg-white/5 hover:bg-gray-50 transition-colors"
+                  >
+                    <Flag className="w-4 h-4" /> Report / Block
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
+
+      {/* Report modal */}
+      {showReport && participant && (
+        <ReportBlockModal
+          open={showReport}
+          onClose={() => setShowReport(false)}
+          targetId={participant.id}
+          targetName={participant.name}
+        />
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2" onClick={() => { setShowReactions(null); setShowEmoji(false) }}>
