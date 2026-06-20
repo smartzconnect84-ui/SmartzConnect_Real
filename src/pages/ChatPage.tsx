@@ -209,7 +209,7 @@ export default function ChatPage() {
         <ReportBlockModal
           open={showReport}
           onClose={() => setShowReport(false)}
-          targetId={participant.id}
+          targetUserId={participant.id}
           targetName={participant.name}
         />
       )}
