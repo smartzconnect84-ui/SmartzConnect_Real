@@ -150,20 +150,20 @@ export default function AppShell() {
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
               className="fixed left-0 top-0 bottom-0 w-72 dark:bg-[#0D0A14] bg-white z-50 md:hidden flex flex-col border-r dark:border-white/6 border-gray-100 shadow-2xl">
 
-              <div className="flex items-center justify-between px-5 py-4 border-b dark:border-white/6 border-gray-100">
-                <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-love-gradient flex items-center justify-center">
-                    <Heart className="w-4 h-4 text-white" fill="white" />
-                  </div>
-                  <span className="font-display font-bold text-base">
-                    <span className="text-gradient-love">Smartz</span>
-                    <span className="dark:text-white text-gray-900">Connect</span>
-                  </span>
-                </Link>
+              {/* Flyer banner header */}
+              <div className="relative h-36 flex-shrink-0 overflow-hidden">
+                <img src="/flyer.png" alt="SmartzConnect" className="w-full h-full object-cover object-top" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/70" />
                 <button onClick={() => setDrawerOpen(false)}
-                  className="w-8 h-8 rounded-lg dark:bg-white/5 bg-gray-100 flex items-center justify-center">
-                  <X className="w-4 h-4 dark:text-gray-400 text-gray-600" />
+                  className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                  <X className="w-3.5 h-3.5 text-white" />
                 </button>
+                <div className="absolute bottom-3 left-4">
+                  <span className="font-display font-black text-base text-white drop-shadow-lg">
+                    <span className="text-pink-300">Smartz</span>Connect
+                  </span>
+                  <p className="text-[10px] text-white/70 mt-0.5">Connect · Collaborate · Grow</p>
+                </div>
               </div>
 
               <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">

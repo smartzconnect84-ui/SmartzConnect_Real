@@ -5,6 +5,15 @@ import { ChevronLeft, ChevronRight, Heart, Play, Star, Users, MapPin } from 'luc
 
 const slides = [
   {
+    image: '/flyer.png',
+    badge: '🎉 Birthday Bash & App Launch — June 26, 2026',
+    headline: 'SmartzConnect\nLaunches in Liberia',
+    sub: 'Join us at Bash Pool, Marshall Road on June 26 as we officially launch Africa\'s #1 social platform. Be part of history.',
+    cta: 'Join Free Today',
+    ctaLink: '/register',
+    stat: { icon: Star, value: 'Launch', label: 'June 26, 2026' },
+  },
+  {
     image: '/hero-friends.jpg',
     badge: '🌍 Africa\'s #1 Social Platform',
     headline: 'Where Friendships\nBecome Forever',
