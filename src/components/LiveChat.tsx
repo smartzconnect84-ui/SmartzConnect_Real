@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Minimize2, Maximize2, Phone, ExternalLink, Bot, User, ChevronDown } from 'lucide-react'
+import { MessageCircle, X, Send, Minimize2, Maximize2, Phone, ExternalLink, Bot, User, ChevronDown, XCircle } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
+import { useLiveChat } from '@/contexts/LiveChatContext'
 
 interface ChatMessage {
   id: string
@@ -18,16 +19,16 @@ const botKnowledge: Record<string, string> = {
   'hello|hi|hey|hola': `Hi there! 👋 Welcome to **SmartzConnect** — Africa's #1 social, dating & community platform! I'm your 24/7 assistant. How can I help you today?`,
   'pricing|plans|cost|price|subscription|free|premium|vip': `💎 **Our Plans:**\n\n🆓 **Free** — Browse profiles, basic chat, social feed\n💕 **Premium ($9.99/mo)** — Unlimited swipes, see who liked you, priority matching\n👑 **VIP ($24.99/mo)** — All Premium + live streaming, marketplace seller, ride priority\n\nPay via MTN MoMo or Orange Money! Want to upgrade?`,
   'payment|pay|mtn|orange|mobile money': `📱 **Payment Methods:**\n\nWe accept:\n• 🟡 **MTN Mobile Money** — +231 888 061 379\n• 🟠 **Orange Money LR** — +231 776 679 963\n\nAccount name: **Shedrick K. Nungehn**\n\nAfter sending, submit your Transaction ID in the app within 15 minutes. Need help?`,
-  'dating|match|swipe|discover': `💕 **Dating on SmartzConnect:**\n\nSwipe right to like, left to pass. When both people like each other — it's a match! 🎉\n\nFeatures:\n• Tinder-style swipe cards\n• Super Like & Boost\n• Distance, age & interest filters\n• 500K+ matches made!\n\nReady to find love? Sign up free!`,
-  'chat|message|whatsapp': `💬 **Chat Features:**\n\n• Private 1-on-1 messaging\n• Group rooms (8,000+ active rooms)\n• Spin & Chat (random matching)\n• Voice notes, images, GIFs\n• Read receipts & typing indicators\n\nAll powered by real-time Supabase!`,
-  'marketplace|sell|buy|shop': `🛍️ **SmartzConnect Marketplace:**\n\n• List & sell products globally\n• Browse 50,000+ listings\n• Secure payments\n• Seller profiles & reviews\n• Admin-verified listings\n\nStart selling today — it's free for basic listings!`,
-  'smartztv|live|stream|video': `📺 **SmartzTV:**\n\nLike TikTok Live but for Africa!\n• Watch & go live\n• Creator profiles\n• Video uploads\n• Live reactions & comments\n• Featured content\n\nBecome a creator today!`,
-  'ride|uber|driver|car|transport': `🚗 **SmartzRide:**\n\nUber-style ride-hailing in Liberia!\n• Book rides instantly\n• Live driver tracking\n• Fare estimates\n• Rate your driver\n• Become a driver & earn!\n\nCurrently available in Monrovia, expanding soon.`,
-  'safety|safe|report|block|trust': `🛡️ **Safety & Trust:**\n\nYour safety is our #1 priority:\n• Profile verification badges\n• Report & block users\n• Content moderation\n• 24/7 safety team\n• Community guidelines\n\nReport any issue: safety@smartzconnect.com`,
-  'contact|support|help|email|phone': `📞 **Contact Us:**\n\n• 💬 **Support:** support@smartzconnect.com\n• 💼 **Business:** business@smartzconnect.com\n• 🔧 **Admin:** admin@smartzconnect.com\n• 📱 **Phone/WhatsApp:** +231 776 679 963\n• 🕐 **Available:** 24/7 Online\n\nOr chat with us on WhatsApp right now! 👇`,
-  'register|signup|join|account|create': `🎉 **Join SmartzConnect Free!**\n\nSign up in 30 seconds:\n1. Click "Join Free" on the homepage\n2. Enter your name, email & password\n3. Verify your email\n4. Complete your profile\n5. Start connecting! 💕\n\nNo credit card needed. Free forever!`,
-  'countries|global|africa|liberia|worldwide': `🌍 **Global Reach:**\n\nSmartzConnect connects people across:\n• 🇱🇷 Liberia (our home!)\n• All 54 African countries\n• 195+ countries worldwide\n• 2M+ active users\n• Available in English (more languages coming!)\n\nWherever you are, we connect you!`,
-  'pwa|app|install|mobile|download': `📱 **Install SmartzConnect:**\n\nWe're a Progressive Web App (PWA)!\n• No app store needed\n• Install directly from your browser\n• Works offline\n• Push notifications\n• Fast & lightweight\n\nOn mobile: tap "Add to Home Screen" in your browser!`,
+  'dating|match|swipe|discover': `💕 **Dating on SmartzConnect:**\n\nSwipe right to like, left to pass. When both people like each other — it's a match! 🎉\n\nFeatures:\n• Tinder-style swipe cards\n• Super Like & Boost\n• Distance, age & interest filters\n\nReady to find love? Sign up free!`,
+  'chat|message|whatsapp': `💬 **Chat Features:**\n\n• Private 1-on-1 messaging\n• Group rooms\n• Spin & Chat (random matching)\n• Voice notes, images, GIFs\n• Read receipts & typing indicators`,
+  'marketplace|sell|buy|shop': `🛍️ **SmartzConnect Marketplace:**\n\n• List & sell products globally\n• Secure payments\n• Seller profiles & reviews\n• Admin-verified listings\n\nStart selling today — it's free for basic listings!`,
+  'smartztv|live|stream|video': `📺 **SmartzTV:**\n\nLike TikTok Live but for Africa!\n• Watch & go live\n• Creator profiles\n• Video uploads\n• Live reactions & comments`,
+  'ride|uber|driver|car|transport': `🚗 **SmartzRide:**\n\nUber-style ride-hailing!\n• Book rides instantly\n• Live driver tracking\n• Fare estimates\n• Become a driver & earn!`,
+  'safety|safe|report|block|trust': `🛡️ **Safety & Trust:**\n\n• Profile verification badges\n• Report & block users\n• Content moderation\n• 24/7 safety team\n\nReport any issue: safety@smartzconnect.com`,
+  'contact|support|help|email|phone': `📞 **Contact Us:**\n\n• 💬 **Support:** support@smartzconnect.com\n• 💼 **Business:** business@smartzconnect.com\n• 📱 **Phone/WhatsApp:** +231 776 679 963\n• 🕐 **Available:** 24/7 Online`,
+  'register|signup|join|account|create': `🎉 **Join SmartzConnect Free!**\n\nSign up in 30 seconds:\n1. Click "Join Free" on the homepage\n2. Enter your name, email & password\n3. Verify your email\n4. Start connecting! 💕`,
+  'countries|global|africa|liberia|worldwide': `🌍 **Global Reach:**\n\nSmartzConnect connects people across:\n• 🇱🇷 Liberia (our home!)\n• All 54 African countries\n• 195+ countries worldwide\n\nWherever you are, we connect you!`,
+  'pwa|app|install|mobile|download': `📱 **Install SmartzConnect:**\n\nWe're a Progressive Web App (PWA)!\n• No app store needed\n• Install directly from your browser\n• Works offline\n• Push notifications`,
 }
 
 function getBotResponse(input: string): { text: string; options?: string[] } {
@@ -46,7 +47,7 @@ function getBotResponse(input: string): { text: string; options?: string[] } {
 const quickReplies = ['💰 Pricing', '💕 Dating', '🛍️ Marketplace', '📺 SmartzTV', '🚗 Rides', '📞 Contact']
 
 export default function LiveChat() {
-  const [open, setOpen] = useState(false)
+  const { open, dismissed, setOpen, setDismissed, unreadCount, setUnreadCount } = useLiveChat()
   const [minimized, setMinimized] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -62,11 +63,17 @@ export default function LiveChat() {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [teaserVisible, setTeaserVisible] = useState(true)
-  const [unreadCount, setUnreadCount] = useState(1)
   const dragStart = useRef({ x: 0, y: 0, px: 0, py: 0 })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing])
+
+  useEffect(() => {
+    if (open) {
+      setTeaserVisible(false)
+      setUnreadCount(0)
+    }
+  }, [open])
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return
@@ -93,7 +100,6 @@ export default function LiveChat() {
     }, 800 + Math.random() * 600)
   }
 
-  // Drag handlers
   const onMouseDown = (e: React.MouseEvent) => {
     setDragging(true)
     dragStart.current = { x: e.clientX, y: e.clientY, px: position.x, py: position.y }
@@ -125,6 +131,8 @@ export default function LiveChat() {
     ))
   }
 
+  if (dismissed) return null
+
   return (
     <>
       {/* ── Chat Window ── */}
@@ -135,11 +143,12 @@ export default function LiveChat() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed z-50 shadow-2xl shadow-pink-500/20"
+            className="fixed z-[60] shadow-2xl shadow-pink-500/20"
             style={{
               bottom: `${80 - position.y}px`,
               right: `${24 - position.x}px`,
               width: '360px',
+              maxWidth: 'calc(100vw - 32px)',
             }}
           >
             <div className="dark:bg-[#130E1E] bg-white rounded-3xl border dark:border-white/8 border-pink-100 overflow-hidden flex flex-col"
@@ -161,11 +170,14 @@ export default function LiveChat() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setMinimized(!minimized)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors">
+                  <button onClick={() => setMinimized(!minimized)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title={minimized ? 'Expand' : 'Minimize'}>
                     {minimized ? <Maximize2 className="w-3.5 h-3.5 text-white" /> : <Minimize2 className="w-3.5 h-3.5 text-white" />}
                   </button>
-                  <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors">
+                  <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title="Close chat">
                     <X className="w-3.5 h-3.5 text-white" />
+                  </button>
+                  <button onClick={() => { setOpen(false); setDismissed(true) }} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-red-400/40 transition-colors" title="Dismiss to navbar">
+                    <XCircle className="w-3.5 h-3.5 text-white" />
                   </button>
                 </div>
               </div>
@@ -249,6 +261,9 @@ export default function LiveChat() {
                         <Send className="w-3 h-3 text-white" />
                       </button>
                     </div>
+                    <p className="text-[9px] dark:text-gray-600 text-gray-400 text-center mt-1.5">
+                      Tip: Click <XCircle className="inline w-2.5 h-2.5 mx-0.5" /> to move chat to navbar
+                    </p>
                   </div>
                 </>
               )}
@@ -257,7 +272,7 @@ export default function LiveChat() {
         )}
       </AnimatePresence>
 
-      {/* ── Teaser bubble (shown before first open) ── */}
+      {/* ── Teaser bubble ── */}
       <AnimatePresence>
         {!open && teaserVisible && (
           <motion.div
@@ -265,7 +280,7 @@ export default function LiveChat() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.9 }}
             transition={{ delay: 2.5, type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 right-6 z-50 max-w-[220px]"
+            className="fixed bottom-24 right-6 z-[59] max-w-[220px]"
           >
             <div className="dark:bg-[#130E1E] bg-white rounded-2xl rounded-br-sm p-3.5 shadow-xl shadow-pink-500/15 border dark:border-white/8 border-gray-100 relative">
               <button onClick={() => setTeaserVisible(false)}
@@ -282,7 +297,6 @@ export default function LiveChat() {
                 ))}
               </div>
             </div>
-            {/* Arrow */}
             <div className="w-3 h-3 dark:bg-[#130E1E] bg-white border-r border-b dark:border-white/8 border-gray-100 rotate-45 ml-auto mr-5 -mt-1.5 shadow-sm" />
           </motion.div>
         )}
@@ -293,7 +307,8 @@ export default function LiveChat() {
         onClick={() => { setOpen(!open); setTeaserVisible(false); setUnreadCount(0) }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-love-gradient shadow-2xl shadow-pink-500/40 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-[59] w-14 h-14 rounded-full bg-love-gradient shadow-2xl shadow-pink-500/40 flex items-center justify-center"
+        title="Open support chat"
       >
         {!open && unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-bounce">
@@ -311,16 +326,6 @@ export default function LiveChat() {
             </motion.div>
           )}
         </AnimatePresence>
-        {/* Unread badge */}
-        {!open && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-white flex items-center justify-center"
-          >
-            <span className="text-[9px] font-black text-white">1</span>
-          </motion.div>
-        )}
       </motion.button>
     </>
   )

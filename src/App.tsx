@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { StreamProvider } from '@/contexts/StreamContext'
+import { LiveChatProvider } from '@/contexts/LiveChatContext'
 import { initOneSignal } from '@/lib/onesignal'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -88,6 +89,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <StreamProvider>
+          <LiveChatProvider>
           <BrowserRouter>
             <AppInit />
             <LiveChat />
@@ -169,6 +171,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          </LiveChatProvider>
         </StreamProvider>
       </AuthProvider>
     </ThemeProvider>

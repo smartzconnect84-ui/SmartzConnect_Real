@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
+import { useLiveChat } from '@/contexts/LiveChatContext'
 import { Sun, Moon, Menu } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 
@@ -34,6 +35,7 @@ export default function AppShell() {
   const location  = useLocation()
   const { signOut, user } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { dismissed, setOpen, setDismissed, unreadCount, setUnreadCount } = useLiveChat()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const isActive = (path: string) => location.pathname.startsWith(path)

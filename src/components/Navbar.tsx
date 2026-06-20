@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Moon, Menu, X, ChevronDown, Tv, ShoppingBag, Car, Package, Megaphone } from 'lucide-react'
+import { Sun, Moon, Menu, X, ChevronDown, Tv, ShoppingBag, Car, Package, Megaphone, MessageCircle } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useLiveChat } from '@/contexts/LiveChatContext'
 
 const exploreItems = [
-  { label: 'SmartzConnect TV', href: '/smartztv',    icon: Tv,          desc: 'Live streams & creator content', color: 'text-violet-500' },
-  { label: 'SmartzRide',       href: '/smartzride',  icon: Car,         desc: 'Ride-hailing across Africa',     color: 'text-emerald-500' },
-  { label: 'SmartzMarket',     href: '/smartzmarket', icon: ShoppingBag, desc: 'Buy & sell anything',           color: 'text-amber-500' },
-  { label: 'SmartzDelivery',   href: '/smartzdelivery', icon: Package,  desc: 'Fast local delivery',           color: 'text-blue-500' },
-  { label: 'SmartzAds',        href: '/smartzads',   icon: Megaphone,   desc: 'Advertise to millions',         color: 'text-pink-500' },
+  { label: 'SmartzConnect TV', href: '/smartztv',      icon: Tv,          desc: 'Live streams & creator content', color: 'text-violet-500' },
+  { label: 'SmartzRide',       href: '/smartzride',    icon: Car,         desc: 'Ride-hailing across Africa',     color: 'text-emerald-500' },
+  { label: 'SmartzMarket',     href: '/smartzmarket',  icon: ShoppingBag, desc: 'Buy & sell anything',            color: 'text-amber-500' },
+  { label: 'SmartzDelivery',   href: '/smartzdelivery',icon: Package,     desc: 'Fast local delivery',            color: 'text-blue-500' },
+  { label: 'SmartzAds',        href: '/smartzads',     icon: Megaphone,   desc: 'Advertise to millions',          color: 'text-pink-500' },
 ]
 
 const mainLinks = [
@@ -23,6 +24,7 @@ const mainLinks = [
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme()
+  const { dismissed, open, setOpen, setDismissed, unreadCount, setUnreadCount } = useLiveChat()
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -36,7 +38,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -47,7 +48,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Close mobile on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   const isActive = (href: string) =>
@@ -74,7 +74,6 @@ export default function Navbar() {
 
             {/* Desktop nav */}
             <div className="hidden lg:flex items-center gap-1">
-              {/* Home */}
               <Link to="/"
                 className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
                   isActive('/')
@@ -84,7 +83,6 @@ export default function Navbar() {
                 Home
               </Link>
 
-              {/* Explore dropdown */}
               <div ref={dropdownRef} className="relative">
                 <button
                   onClick={() => setExploreOpen(v => !v)}
@@ -112,7 +110,7 @@ export default function Navbar() {
                           <Link key={item.href} to={item.href}
                             onClick={() => setExploreOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:dark:bg-white/5 hover:bg-pink-50 transition-all group">
-                            <div className={`w-8 h-8 rounded-lg dark:bg-white/5 bg-gray-100 flex items-center justify-center flex-shrink-0`}>
+                            <div className="w-8 h-8 rounded-lg dark:bg-white/5 bg-gray-100 flex items-center justify-center flex-shrink-0">
                               <Icon className={`w-4 h-4 ${item.color}`} />
                             </div>
                             <div>
@@ -127,7 +125,6 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              {/* Other links */}
               {mainLinks.slice(1).map(link => (
                 <Link key={link.href} to={link.href}
                   className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
@@ -142,6 +139,23 @@ export default function Navbar() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
+              {/* Live Chat icon — shown when chat is dismissed to navbar */}
+              {dismissed && (
+                <button
+                  onClick={() => { setDismissed(false); setOpen(true); setUnreadCount(0) }}
+                  title="Open support chat"
+                  className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    scrolled ? 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 hover:text-brand-pink' : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}>
+                  <MessageCircle className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               {/* Theme toggle */}
               <button onClick={toggleTheme}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
@@ -197,7 +211,6 @@ export default function Navbar() {
                   🏠 Home
                 </Link>
 
-                {/* Explore accordion */}
                 <div>
                   <button onClick={() => setMobileExploreOpen(v => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 rounded-xl dark:text-white text-gray-900 font-semibold hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink transition-all">
@@ -232,6 +245,14 @@ export default function Navbar() {
                 ))}
 
                 <div className="h-px dark:bg-white/5 bg-gray-100 my-2" />
+                {/* Live chat in mobile menu when dismissed */}
+                {dismissed && (
+                  <button onClick={() => { setDismissed(false); setOpen(true); setMobileOpen(false) }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl dark:text-white text-gray-900 font-semibold hover:dark:bg-white/5 hover:bg-pink-50 hover:text-brand-pink transition-all">
+                    <MessageCircle className="w-4 h-4 text-brand-pink" /> Support Chat
+                    {unreadCount > 0 && <span className="ml-auto px-1.5 py-0.5 rounded-full bg-brand-pink text-white text-[10px] font-black">{unreadCount}</span>}
+                  </button>
+                )}
                 <div className="flex gap-2 px-2 pb-1">
                   <Link to="/login" className="flex-1 py-2.5 rounded-xl text-center text-sm font-semibold dark:bg-white/5 bg-gray-100 dark:text-white text-gray-900 hover:text-brand-pink transition-all">
                     Sign In
