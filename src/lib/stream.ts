@@ -58,10 +58,8 @@ export function getOrCreateDirectChannel(userId1: string, userId2: string) {
 }
 
 export function getOrCreateGroupChannel(roomId: string, members: string[], name: string) {
-  return streamClient.channel('team', roomId, {
-    name,
-    members,
-  })
+  const channelData = { name, members } as Record<string, unknown>
+  return streamClient.channel('team', roomId, channelData as any)
 }
 
 export default streamClient
