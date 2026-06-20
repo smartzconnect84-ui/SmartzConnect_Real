@@ -44,7 +44,7 @@ export default function SmartzAdsPage() {
       {/* Hero with flyer */}
       <section className="relative overflow-hidden">
         <div className="relative h-72 sm:h-96 lg:h-[460px]">
-          <img src="/flyer.png" alt="SmartzConnect Ads" className="w-full h-full object-cover object-center" />
+          <img src="/flyer.png" alt="SmartzConnect Ads" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-pink-900/30 to-black/90" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

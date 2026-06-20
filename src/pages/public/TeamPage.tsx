@@ -88,7 +88,7 @@ export default function TeamPage() {
       {/* ── Hero with Flyer ── */}
       <section className="relative overflow-hidden">
         <div className="relative h-64 sm:h-80">
-          <img src="/flyer.png" alt="SmartzConnect Birthday Bash & Launch" className="w-full h-full object-cover object-center" />
+          <img src="/flyer.png" alt="SmartzConnect Birthday Bash & Launch" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/85" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 mb-4">

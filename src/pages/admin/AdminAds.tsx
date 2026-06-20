@@ -129,13 +129,13 @@ export default function AdminAds() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-2xl overflow-hidden border dark:border-white/8 border-gray-200 shadow-lg group hover:shadow-xl transition-all">
           <div className="relative">
-            <img src="/flyer-ordinary.png" alt="Ordinary Plan Flyer" className="w-full object-cover" />
+            <img src="/flyer-ordinary.png" alt="Ordinary Plan Flyer" className="w-full object-cover scale-80 md:scale-100 transition-transform duration-700" />
             <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/50 text-white text-[10px] font-bold">ORD Flyer</div>
           </div>
         </div>
         <div className="rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-lg shadow-amber-500/10 group hover:shadow-xl transition-all">
           <div className="relative">
-            <img src="/flyer-vip.png" alt="VIP Plan Flyer" className="w-full object-cover" />
+            <img src="/flyer-vip.png" alt="VIP Plan Flyer" className="w-full object-cover scale-80 md:scale-100 transition-transform duration-700" />
             <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-amber-500/80 text-white text-[10px] font-bold">👑 VIP Flyer</div>
           </div>
         </div>

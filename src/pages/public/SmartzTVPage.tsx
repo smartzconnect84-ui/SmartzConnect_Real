@@ -22,7 +22,7 @@ export default function SmartzTVPage() {
       {/* Hero with flyer */}
       <section className="relative overflow-hidden">
         <div className="relative h-72 sm:h-96 lg:h-[500px]">
-          <img src="/flyer.png" alt="SmartzConnect TV" className="w-full h-full object-cover object-center" />
+          <img src="/flyer.png" alt="SmartzConnect TV" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-violet-900/40 to-black/90" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/30 backdrop-blur-sm border border-violet-400/40 mb-5">

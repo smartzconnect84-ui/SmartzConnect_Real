@@ -85,10 +85,10 @@ export default function BlogPage() {
       <section className="pt-20 pb-0 dark:bg-[#080510] bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
           <div className="rounded-2xl overflow-hidden shadow-xl border dark:border-white/8 border-gray-200 group cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all">
-            <img src="/flyer-ordinary.png" alt="SmartzConnect Ordinary Plan" className="w-full h-auto object-cover" />
+            <img src="/flyer-ordinary.png" alt="SmartzConnect Ordinary Plan" className="w-full h-auto object-cover scale-80 md:scale-100 transition-transform duration-700" />
           </div>
           <div className="rounded-2xl overflow-hidden shadow-xl border-2 border-amber-500/40 group cursor-pointer hover:shadow-2xl hover:shadow-amber-500/20 hover:scale-[1.01] transition-all">
-            <img src="/flyer-vip.png" alt="SmartzConnect VIP Plan" className="w-full h-auto object-cover" />
+            <img src="/flyer-vip.png" alt="SmartzConnect VIP Plan" className="w-full h-auto object-cover scale-80 md:scale-100 transition-transform duration-700" />
           </div>
         </div>
       </section>
@@ -96,7 +96,7 @@ export default function BlogPage() {
       {/* Hero with flyer */}
       <section className="relative overflow-hidden mt-6">
         <div className="relative h-56 sm:h-72 lg:h-80">
-          <img src="/flyer.png" alt="SmartzConnect" className="w-full h-full object-cover object-center" />
+          <img src="/flyer.png" alt="SmartzConnect" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/80" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 mb-4">
