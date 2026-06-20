@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import logoImg from '@/assets/logo.png'
 import TurnstileWidget from '@/components/TurnstileWidget'
 

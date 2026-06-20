@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Camera, Edit3, Save, X, MapPin, Briefcase, GraduationCap, Heart, Shield, Crown, Star, Image, Settings, Bell, Lock, LogOut, ChevronRight, Check } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 
 const interestOptions = [
   'Music', 'Travel', 'Cooking', 'Art', 'Tech', 'Fitness', 'Fashion', 'Gaming',

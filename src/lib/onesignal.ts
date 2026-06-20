@@ -1,8 +1,11 @@
 const appId = import.meta.env.VITE_ONESIGNAL_APP_ID as string
 
 const PROD_HOSTNAME = 'smartzconnect.com'
+const CF_PAGES_HOSTNAME = 'smartzconnect.pages.dev'
 const isProduction = window.location.hostname === PROD_HOSTNAME ||
-  window.location.hostname.endsWith('.' + PROD_HOSTNAME)
+  window.location.hostname.endsWith('.' + PROD_HOSTNAME) ||
+  window.location.hostname === CF_PAGES_HOSTNAME ||
+  window.location.hostname.endsWith('.' + CF_PAGES_HOSTNAME)
 
 export function initOneSignal() {
   if (!appId) {

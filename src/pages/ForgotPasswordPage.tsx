@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart, Mail, ArrowLeft, Loader2, CheckCircle2, Send } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import TurnstileWidget from '@/components/TurnstileWidget'
 
 const TURNSTILE_ENABLED = !!import.meta.env.VITE_TURNSTILE_SITE_KEY

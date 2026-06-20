@@ -4,7 +4,7 @@ import { X, Copy, Check, Clock, AlertCircle, CheckCircle2, ChevronRight, Smartph
 import { MOBILE_MONEY_CONFIG, CONFIRMATION_WINDOW_MINUTES } from '@/lib/mobileMoney'
 import type { MobileMoneyProvider } from '@/lib/mobileMoney'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 
 interface MobileMoneyModalProps {
   isOpen: boolean

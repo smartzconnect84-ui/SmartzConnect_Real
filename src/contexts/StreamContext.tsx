@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 
 interface StreamContextType {
@@ -11,7 +11,7 @@ interface StreamContextType {
   userToken: string | null
 }
 
-const StreamContext = createContext<StreamContextType>({
+export const StreamContext = createContext<StreamContextType>({
   connected: false,
   unreadCount: 0,
   apiKey: '',
@@ -94,6 +94,3 @@ export function StreamProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useStream() {
-  return useContext(StreamContext)
-}

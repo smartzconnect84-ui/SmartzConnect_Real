@@ -6,7 +6,7 @@ import {
   Crown, User, X, LogOut, Zap, Home, Compass, Users
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { Sun, Moon, Menu } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart, Lock, Eye, EyeOff, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 
 export default function ResetPasswordPage() {
