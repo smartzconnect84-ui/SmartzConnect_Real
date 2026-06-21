@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Minimize2, Maximize2, Phone, ExternalLink, Bot, User, ChevronDown, XCircle } from 'lucide-react'
+import { MessageCircle, X, Send, Minimize2, Maximize2, Phone, ExternalLink, Bot, User, ChevronDown } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
 import { useLiveChat } from '@/contexts/LiveChatContext'
 
@@ -63,8 +63,16 @@ export default function LiveChat() {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [teaserVisible, setTeaserVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const dragStart = useRef({ x: 0, y: 0, px: 0, py: 0 })
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check, { passive: true })
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing])
 
@@ -101,6 +109,7 @@ export default function LiveChat() {
   }
 
   const onMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return
     setDragging(true)
     dragStart.current = { x: e.clientX, y: e.clientY, px: position.x, py: position.y }
   }
@@ -133,31 +142,39 @@ export default function LiveChat() {
 
   if (dismissed) return null
 
+  // Mobile: bottom-sheet style. Desktop: floating.
+  const windowStyle = isMobile
+    ? { bottom: 0, left: 0, right: 0, width: '100%' }
+    : { bottom: `${88 - position.y}px`, right: `${24 - position.x}px`, width: '360px', maxWidth: 'calc(100vw - 32px)' }
+
+  const windowHeight = isMobile ? '82dvh' : (minimized ? 'auto' : '520px')
+
   return (
     <>
       {/* ── Chat Window ── */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed z-[60] shadow-2xl shadow-pink-500/20"
-            style={{
-              bottom: `${80 - position.y}px`,
-              right: `${24 - position.x}px`,
-              width: '360px',
-              maxWidth: 'calc(100vw - 32px)',
-            }}
+            initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.85, y: 20 }}
+            animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.85, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="fixed z-[9999] shadow-2xl shadow-pink-500/20"
+            style={windowStyle}
           >
-            <div className="dark:bg-[#130E1E] bg-white rounded-3xl border dark:border-white/8 border-pink-100 overflow-hidden flex flex-col"
-              style={{ height: minimized ? 'auto' : '520px' }}>
+            <div
+              className={`dark:bg-[#130E1E] bg-white border dark:border-white/8 border-pink-100 overflow-hidden flex flex-col ${isMobile ? 'rounded-t-3xl' : 'rounded-3xl'}`}
+              style={{ height: windowHeight }}
+            >
+              {/* Drag handle on mobile */}
+              {isMobile && (
+                <div className="w-10 h-1 rounded-full dark:bg-white/20 bg-gray-300 mx-auto mt-3 mb-1 flex-shrink-0" />
+              )}
 
-              {/* Header — draggable */}
+              {/* Header */}
               <div
                 onMouseDown={onMouseDown}
-                className="flex items-center justify-between px-4 py-3 bg-love-gradient cursor-grab active:cursor-grabbing select-none"
+                className={`flex items-center justify-between px-4 py-3 bg-love-gradient flex-shrink-0 ${!isMobile ? 'cursor-grab active:cursor-grabbing' : ''} select-none`}
               >
                 <div className="flex items-center gap-2.5">
                   <img src={logoImg} alt="SmartzConnect" className="w-8 h-8 rounded-xl object-contain bg-white/20 p-0.5" />
@@ -170,19 +187,25 @@ export default function LiveChat() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setMinimized(!minimized)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title={minimized ? 'Expand' : 'Minimize'}>
-                    {minimized ? <Maximize2 className="w-3.5 h-3.5 text-white" /> : <Minimize2 className="w-3.5 h-3.5 text-white" />}
-                  </button>
-                  <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title="Close chat">
+                  {!isMobile && (
+                    <button onClick={() => setMinimized(!minimized)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title={minimized ? 'Expand' : 'Minimize'}>
+                      {minimized ? <Maximize2 className="w-3.5 h-3.5 text-white" /> : <Minimize2 className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  )}
+                  <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors" title="Close">
                     <X className="w-3.5 h-3.5 text-white" />
                   </button>
-                  <button onClick={() => { setOpen(false); setDismissed(true) }} className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-red-400/40 transition-colors" title="Dismiss to navbar">
-                    <XCircle className="w-3.5 h-3.5 text-white" />
+                  <button
+                    onClick={() => { setOpen(false); setDismissed(true) }}
+                    className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center hover:bg-red-400/40 transition-colors"
+                    title="Move to menu bar"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5 text-white" />
                   </button>
                 </div>
               </div>
 
-              {!minimized && (
+              {(!minimized || isMobile) && (
                 <>
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -237,7 +260,7 @@ export default function LiveChat() {
                   </div>
 
                   {/* WhatsApp CTA */}
-                  <div className="px-4 py-2 border-t dark:border-white/5 border-gray-100">
+                  <div className="px-4 py-2 border-t dark:border-white/5 border-gray-100 flex-shrink-0">
                     <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold hover:bg-emerald-500/20 transition-colors">
                       <Phone className="w-3.5 h-3.5" />
@@ -247,7 +270,7 @@ export default function LiveChat() {
                   </div>
 
                   {/* Input */}
-                  <div className="p-3 border-t dark:border-white/6 border-pink-100">
+                  <div className="p-3 border-t dark:border-white/6 border-pink-100 flex-shrink-0" style={{ paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom))' : '12px' }}>
                     <div className="flex items-center gap-2 dark:bg-white/5 bg-gray-50 rounded-xl border dark:border-white/8 border-gray-200 px-3 py-2">
                       <input
                         value={input}
@@ -262,13 +285,24 @@ export default function LiveChat() {
                       </button>
                     </div>
                     <p className="text-[9px] dark:text-gray-600 text-gray-400 text-center mt-1.5">
-                      Tip: Click <XCircle className="inline w-2.5 h-2.5 mx-0.5" /> to move chat to navbar
+                      Tap <ChevronDown className="inline w-2.5 h-2.5 mx-0.5" /> to move chat to menu bar
                     </p>
                   </div>
                 </>
               )}
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Backdrop on mobile ── */}
+      <AnimatePresence>
+        {open && isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] md:hidden"
+          />
         )}
       </AnimatePresence>
 
@@ -280,7 +314,7 @@ export default function LiveChat() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.9 }}
             transition={{ delay: 2.5, type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 right-6 z-[59] max-w-[220px]"
+            className="fixed bottom-[148px] right-4 md:bottom-24 md:right-6 z-[9997] max-w-[220px]"
           >
             <div className="dark:bg-[#130E1E] bg-white rounded-2xl rounded-br-sm p-3.5 shadow-xl shadow-pink-500/15 border dark:border-white/8 border-gray-100 relative">
               <button onClick={() => setTeaserVisible(false)}
@@ -302,12 +336,12 @@ export default function LiveChat() {
         )}
       </AnimatePresence>
 
-      {/* ── Floating Button ── */}
+      {/* ── Floating Button ── above bottom-nav on mobile (bottom-20=80px), normal on desktop ── */}
       <motion.button
         onClick={() => { setOpen(!open); setTeaserVisible(false); setUnreadCount(0) }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-[59] w-14 h-14 rounded-full bg-love-gradient shadow-2xl shadow-pink-500/40 flex items-center justify-center"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[9997] w-14 h-14 rounded-full bg-love-gradient shadow-2xl shadow-pink-500/40 flex items-center justify-center"
         title="Open support chat"
       >
         {!open && unreadCount > 0 && (
@@ -318,11 +352,11 @@ export default function LiveChat() {
         <AnimatePresence mode="wait">
           {open ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <ChevronDown className="w-6 h-6 text-white" />
+              <X className="w-6 h-6 text-white" />
             </motion.div>
           ) : (
             <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <img src={logoImg} alt="SmartzConnect" className="w-8 h-8 object-contain" />
+              <MessageCircle className="w-6 h-6 text-white" />
             </motion.div>
           )}
         </AnimatePresence>

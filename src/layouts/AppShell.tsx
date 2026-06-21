@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,13 +10,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { useLiveChat } from '@/contexts/LiveChatContext'
 import { Sun, Moon, Menu } from 'lucide-react'
 import logoImg from '@/assets/logo.png'
+import { supabase } from '@/lib/supabase'
 
 const primaryNav = [
-  { path: '/app/feed',          icon: Home,          label: 'Feed',     badge: null },
-  { path: '/app/discover',      icon: Compass,       label: 'Discover', badge: '🔥' },
-  { path: '/app/chat/1',        icon: MessageCircle, label: 'Chat',     badge: '3' },
-  { path: '/app/notifications', icon: Bell,          label: 'Alerts',   badge: '5' },
-  { path: '/app/profile',       icon: User,          label: 'Me',       badge: null },
+  { path: '/app/feed',          icon: Home,          label: 'Feed',     badge: null as string | null },
+  { path: '/app/discover',      icon: Compass,       label: 'Discover', badge: '🔥' as string | null },
+  { path: '/app/chat/1',        icon: MessageCircle, label: 'Chat',     badge: null as string | null },
+  { path: '/app/notifications', icon: Bell,          label: 'Alerts',   badge: null as string | null },
+  { path: '/app/profile',       icon: User,          label: 'Me',       badge: null as string | null },
 ]
 
 const secondaryNav = [
@@ -37,9 +38,46 @@ export default function AppShell() {
   const { theme, toggleTheme } = useTheme()
   const { dismissed, setOpen, setDismissed, unreadCount, setUnreadCount } = useLiveChat()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages]     = useState(0)
+  const [unreadNotifs,   setUnreadNotifs]       = useState(0)
 
   const isActive = (path: string) => location.pathname.startsWith(path)
   const currentPage = allNav.find(n => isActive(n.path))
+
+  // ── Real unread counts ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user?.id) return
+    let mounted = true
+
+    const fetchCounts = async () => {
+      const [msgRes, notifRes] = await Promise.all([
+        supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('receiver_id', user.id)
+          .eq('read', false),
+        supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('read', false),
+      ])
+      if (!mounted) return
+      setUnreadMessages(msgRes.count ?? 0)
+      setUnreadNotifs(notifRes.count ?? 0)
+    }
+
+    fetchCounts()
+
+    // Refresh counts via realtime
+    const ch = supabase
+      .channel('shell:unread')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages',       filter: `receiver_id=eq.${user.id}` }, fetchCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications',  filter: `user_id=eq.${user.id}`     }, fetchCounts)
+      .subscribe()
+
+    return () => { mounted = false; supabase.removeChannel(ch) }
+  }, [user?.id])
 
   return (
     <div className="h-screen flex dark:bg-[#0A0710] bg-gray-50 overflow-hidden">
@@ -65,6 +103,10 @@ export default function AppShell() {
           {primaryNav.map(item => {
             const active = isActive(item.path)
             const Icon = item.icon
+            const liveBadge =
+              item.label === 'Chat'   && unreadMessages > 0 ? String(unreadMessages > 99 ? '99+' : unreadMessages) :
+              item.label === 'Alerts' && unreadNotifs   > 0 ? String(unreadNotifs   > 99 ? '99+' : unreadNotifs)   :
+              item.badge
             return (
               <Link key={item.path} to={item.path}
                 title={item.label}
@@ -75,13 +117,12 @@ export default function AppShell() {
                 }`}>
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm font-semibold hidden lg:block">{item.label}</span>
-                {item.badge && !active && (
+                {liveBadge && !active && (
                   <span className={`hidden lg:flex ml-auto text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                    item.badge === '🔥' ? 'text-orange-500' : 'bg-brand-pink text-white min-w-[18px] text-center'
-                  }`}>{item.badge}</span>
+                    liveBadge === '🔥' ? 'text-orange-500' : 'bg-brand-pink text-white min-w-[18px] text-center'
+                  }`}>{liveBadge}</span>
                 )}
-                {/* Small dot badge on icon for md */}
-                {item.badge && item.badge !== '🔥' && !active && (
+                {liveBadge && liveBadge !== '🔥' && !active && (
                   <span className="lg:hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
                 )}
               </Link>
@@ -238,20 +279,23 @@ export default function AppShell() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            {dismissed && (
-              <button
-                onClick={() => { setOpen(true); setDismissed(false); setUnreadCount(0) }}
-                title="Open support chat"
-                className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-pink-500/10 transition-colors">
-                <MessageCircle className="w-4 h-4 dark:text-gray-400 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">{unreadCount}</span>
-                )}
-              </button>
-            )}
+            {/* Support chat icon — always visible in top bar */}
+            <button
+              onClick={() => { setOpen(true); setDismissed(false); setUnreadCount(0) }}
+              title={dismissed ? 'Restore support chat' : 'Open support chat'}
+              className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-pink-500/10 transition-colors">
+              <MessageCircle className={`w-4 h-4 transition-colors ${dismissed ? 'text-brand-pink' : 'dark:text-gray-400 text-gray-600'}`} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">{unreadCount}</span>
+              )}
+            </button>
             <Link to="/app/notifications" className="relative w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center">
               <Bell className="w-4 h-4 dark:text-gray-400 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-pink" />
+              {unreadNotifs > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
+                  {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                </span>
+              )}
             </Link>
           </div>
         </div>
@@ -280,9 +324,15 @@ export default function AppShell() {
 
                 <div className={`relative z-10 w-6 h-6 flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
                   <Icon className={`w-5 h-5 transition-colors duration-200 ${active ? 'text-brand-pink' : 'dark:text-gray-500 text-gray-400'}`} />
-                  {item.badge && item.badge !== '🔥' && !active && (
+                  {/* Real unread counts on mobile bottom nav */}
+                  {item.label === 'Chat' && unreadMessages > 0 && !active && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
-                      {item.badge}
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
+                  {item.label === 'Alerts' && unreadNotifs > 0 && !active && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-pink text-white text-[8px] font-black flex items-center justify-center">
+                      {unreadNotifs > 9 ? '9+' : unreadNotifs}
                     </span>
                   )}
                   {item.badge === '🔥' && !active && (

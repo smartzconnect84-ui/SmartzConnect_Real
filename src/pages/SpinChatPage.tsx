@@ -1,32 +1,72 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile, Phone, Video } from 'lucide-react'
+import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile, Phone, Video, Database } from 'lucide-react'
 import { useJitsiCall } from '@/contexts/JitsiCallContext'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 
-const profiles = [
-  { name: 'Amara K.',   age: 24, emoji: '👩🏾', country: 'Sierra Leone', flag: '🇸🇱', interests: ['Music', 'Travel', 'Food'],    bio: 'Love exploring new cultures and meeting amazing people! 🌍', online: true  },
-  { name: 'Fatima D.',  age: 26, emoji: '👩🏽', country: 'Senegal',      flag: '🇸🇳', interests: ['Art', 'Dance', 'Fashion'],    bio: 'Artist by day, dancer by night 💃 Looking for genuine connections', online: true  },
-  { name: 'Grace K.',   age: 22, emoji: '👩🏿', country: 'Liberia',      flag: '🇱🇷', interests: ['Movies', 'Cooking', 'Books'], bio: 'Foodie and movie buff 🎬 Let\'s talk about everything!', online: false },
-  { name: 'Nadia M.',   age: 28, emoji: '👩🏾', country: 'Ghana',        flag: '🇬🇭', interests: ['Music', 'Fitness', 'Tech'],   bio: 'Tech girl who loves Afrobeats 🎵 Always up for a good chat', online: true  },
-  { name: 'Aisha T.',   age: 23, emoji: '👩🏽', country: 'Guinea',       flag: '🇬🇳', interests: ['Travel', 'Books', 'Nature'],  bio: 'Wanderlust soul 🌿 Reading books and exploring the world', online: true  },
+const fallbackProfiles = [
+  { name: 'Amara K.',   age: 24, emoji: '👩🏾', country: 'Sierra Leone', flag: '🇸🇱', interests: ['Music', 'Travel', 'Food'],    bio: 'Love exploring new cultures and meeting amazing people! 🌍', online: true,  avatar_url: null },
+  { name: 'Fatima D.',  age: 26, emoji: '👩🏽', country: 'Senegal',      flag: '🇸🇳', interests: ['Art', 'Dance', 'Fashion'],    bio: 'Artist by day, dancer by night 💃 Looking for genuine connections', online: true,  avatar_url: null },
+  { name: 'Grace K.',   age: 22, emoji: '👩🏿', country: 'Liberia',      flag: '🇱🇷', interests: ['Movies', 'Cooking', 'Books'], bio: 'Foodie and movie buff 🎬 Let\'s talk about everything!', online: false, avatar_url: null },
+  { name: 'Nadia M.',   age: 28, emoji: '👩🏾', country: 'Ghana',        flag: '🇬🇭', interests: ['Music', 'Fitness', 'Tech'],   bio: 'Tech girl who loves Afrobeats 🎵 Always up for a good chat', online: true,  avatar_url: null },
+  { name: 'Aisha T.',   age: 23, emoji: '👩🏽', country: 'Guinea',       flag: '🇬🇳', interests: ['Travel', 'Books', 'Nature'],  bio: 'Wanderlust soul 🌿 Reading books and exploring the world', online: true,  avatar_url: null },
 ]
 
+const defaultEmojis = ['👩🏾', '👨🏿', '👩🏽', '👨🏾', '👩🏿', '👨🏽']
 const segments = ['💕', '🔥', '⭐', '💎', '🎯', '✨', '🌟', '💫', '🎪', '🎭', '🎨', '🎵']
 const SEGMENT_COUNT = segments.length
 const SEGMENT_ANGLE = 360 / SEGMENT_COUNT
 
+type SpinProfile = typeof fallbackProfiles[0]
 type Phase = 'idle' | 'spinning' | 'matched' | 'chatting' | 'skipped'
 
 export default function SpinChatPage() {
+  const { user } = useAuth()
   const [phase, setPhase] = useState<Phase>('idle')
-  const [currentProfile, setCurrentProfile] = useState<typeof profiles[0] | null>(null)
+  const [currentProfile, setCurrentProfile] = useState<SpinProfile | null>(null)
   const [rotation, setRotation] = useState(0)
   const [spinCount, setSpinCount] = useState(0)
   const [messages, setMessages] = useState<{ text: string; mine: boolean; time: string }[]>([])
   const [input, setInput] = useState('')
   const [anonymous, setAnonymous] = useState(false)
+  const [poolProfiles, setPoolProfiles] = useState<SpinProfile[]>(fallbackProfiles)
+  const [dbConnected, setDbConnected] = useState(false)
   const controls = useAnimation()
   const { startCall } = useJitsiCall()
+
+  useEffect(() => {
+    const fetchPool = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, date_of_birth, avatar_url, country, bio, interests, last_seen')
+        .order('last_seen', { ascending: false })
+        .limit(30)
+
+      if (!error && data && data.length > 0) {
+        setDbConnected(true)
+        const mapped: SpinProfile[] = data.map((p: any, i: number) => {
+          const dob = p.date_of_birth ? new Date(p.date_of_birth) : null
+          const age = dob ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 3600 * 1000)) : 22 + i
+          return {
+            name: p.full_name || 'Anonymous',
+            age,
+            emoji: defaultEmojis[i % defaultEmojis.length],
+            country: p.country || 'Africa',
+            flag: '🌍',
+            interests: p.interests
+              ? (Array.isArray(p.interests) ? p.interests.slice(0, 3) : String(p.interests).split(',').map((s: string) => s.trim()).slice(0, 3))
+              : ['Connect', 'Chat', 'Meet'],
+            bio: p.bio || 'Looking for amazing connections! 💕',
+            online: p.last_seen ? (Date.now() - new Date(p.last_seen).getTime()) < 300000 : false,
+            avatar_url: p.avatar_url || null,
+          }
+        })
+        setPoolProfiles(mapped)
+      }
+    }
+    fetchPool()
+  }, [])
 
   const handleSpinCall = (type: 'video' | 'audio') => {
     if (!currentProfile) return
@@ -46,7 +86,8 @@ export default function SpinChatPage() {
     const totalDeg = rotation + spins * 360 + extraDeg
     setRotation(totalDeg)
     await controls.start({ rotate: totalDeg, transition: { duration: 3 + Math.random() * 2, ease: [0.17, 0.67, 0.12, 0.99] } })
-    const profile = profiles[Math.floor(Math.random() * profiles.length)]
+    const pool = poolProfiles.filter(p => p.online || true)
+    const profile = pool[Math.floor(Math.random() * pool.length)]
     setCurrentProfile(profile)
     setSpinCount(c => c + 1)
     setMessages([{ text: `Hey! We just matched on Spin & Chat 🎉 How are you?`, mine: false, time: new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }) }])
@@ -69,194 +110,207 @@ export default function SpinChatPage() {
     <div className="h-full flex flex-col dark:bg-[#0A0710] bg-gray-50 overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0">
         <div>
-          <h1 className="font-display font-black text-xl dark:text-white text-gray-900 flex items-center gap-2">
+          <h1 className="font-display font-black text-lg sm:text-xl dark:text-white text-gray-900 flex items-center gap-2">
             <Zap className="w-5 h-5 text-fuchsia-500" /> Spin & Chat
           </h1>
           <p className="text-xs dark:text-gray-400 text-gray-500">Spin the wheel, meet someone new instantly</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs dark:text-gray-400 text-gray-500 bg-fuchsia-500/10 text-fuchsia-500 px-2.5 py-1 rounded-full font-semibold">{spinCount} spins</span>
-          <button onClick={() => setAnonymous(a => !a)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${anonymous ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 dark:border-white/8 border-gray-200'}`}>
-            👤 {anonymous ? 'Anonymous ON' : 'Go Anonymous'}
-          </button>
-          <div className="flex items-center gap-1 text-xs dark:text-gray-400 text-gray-500">
-            <Shield className="w-3.5 h-3.5 text-emerald-500" /> Safe
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${dbConnected ? 'bg-emerald-500/10 text-emerald-500' : 'bg-fuchsia-500/10 text-fuchsia-500'}`}>
+            <Database className="w-3 h-3" />
+            <span className="hidden sm:inline">{dbConnected ? 'Live' : 'Demo'}</span>
           </div>
+          <span className="text-xs dark:text-gray-400 text-gray-500 bg-fuchsia-500/10 text-fuchsia-500 px-2.5 py-1 rounded-full font-semibold">{spinCount} spins</span>
+          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <span className="text-xs dark:text-gray-400 text-gray-500 hidden sm:inline">Anonymous</span>
+            <div onClick={() => setAnonymous(a => !a)}
+              className={`w-9 h-5 rounded-full transition-colors relative ${anonymous ? 'bg-fuchsia-500' : 'dark:bg-white/10 bg-gray-200'}`}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${anonymous ? 'left-4' : 'left-0.5'}`} />
+            </div>
+          </label>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Content area */}
+      <div className="flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
 
-          {/* ── IDLE / SPIN phase ── */}
-          {(phase === 'idle' || phase === 'spinning') && (
-            <motion.div key="spin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-full py-8 px-4">
+          {/* ── Idle / Spin Phase ── */}
+          {(phase === 'idle' || phase === 'spinning' || phase === 'skipped') && (
+            <motion.div key="spin-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="h-full flex flex-col items-center justify-center px-4 py-6 gap-6 sm:gap-8">
 
-              {/* Wheel */}
-              <div className="relative mb-8">
-                {/* Pointer */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 z-10">
-                  <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-brand-pink drop-shadow-lg" />
-                </div>
+              {/* Spin wheel */}
+              <div className="relative flex items-center justify-center">
+                {/* Outer glow */}
+                <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-fuchsia-500/10 blur-2xl" />
 
-                <motion.div animate={controls} className="w-56 h-56 sm:w-72 sm:h-72 rounded-full relative overflow-hidden shadow-2xl shadow-fuchsia-500/20 border-4 border-fuchsia-500/30">
+                <motion.div animate={controls}
+                  className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border-4 border-fuchsia-500/30 overflow-hidden flex-shrink-0">
                   {segments.map((seg, i) => (
-                    <div key={i} className="absolute inset-0 flex items-center justify-center"
-                      style={{ transform: `rotate(${i * SEGMENT_ANGLE}deg)`, clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.tan(Math.PI / SEGMENT_COUNT)}% 0%)` }}>
-                      <div className={`absolute inset-0 ${i % 2 === 0 ? 'bg-gradient-to-br from-fuchsia-600 to-pink-600' : 'bg-gradient-to-br from-purple-700 to-fuchsia-700'}`} />
-                      <span className="absolute text-xl" style={{ top: '15%', left: '50%', transform: `translateX(-50%) rotate(${SEGMENT_ANGLE / 2}deg)` }}>{seg}</span>
+                    <div key={i}
+                      className="absolute inset-0 flex items-start justify-center pt-3 text-base sm:text-lg font-bold"
+                      style={{
+                        transform: `rotate(${i * SEGMENT_ANGLE}deg)`,
+                        clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.tan(Math.PI / SEGMENT_COUNT)}% 0%)`,
+                        background: i % 2 === 0
+                          ? 'linear-gradient(135deg,rgba(236,72,153,0.3),rgba(168,85,247,0.3))'
+                          : 'linear-gradient(135deg,rgba(168,85,247,0.2),rgba(236,72,153,0.2))',
+                      }}>
+                      {seg}
                     </div>
                   ))}
-                  {/* Center hub */}
+                  {/* Center */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-[#0A0710] border-4 border-fuchsia-500/50 flex items-center justify-center shadow-xl z-10">
-                      <Sparkles className="w-6 h-6 text-fuchsia-400" />
+                    <div className="w-12 h-12 rounded-full bg-love-gradient flex items-center justify-center shadow-lg">
+                      <Zap className="w-6 h-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
+
+                {/* Pointer */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-fuchsia-500 filter drop-shadow-lg" />
               </div>
 
-              {/* Stats row */}
-              <div className="flex gap-6 mb-8 text-center">
-                {[{ label: 'Online Now', value: '12,847', icon: '🟢' }, { label: 'Countries', value: '47', icon: '🌍' }, { label: 'Matches Today', value: '3,291', icon: '💕' }].map(s => (
-                  <div key={s.label}>
-                    <p className="text-lg font-black dark:text-white text-gray-900">{s.icon} {s.value}</p>
-                    <p className="text-[10px] dark:text-gray-500 text-gray-400">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Filters */}
-              <div className="flex gap-2 mb-6 flex-wrap justify-center">
-                {[{ icon: Globe, label: 'Worldwide' }, { icon: MapPin, label: 'Nearby' }, { icon: Heart, label: 'Dating' }, { icon: MessageCircle, label: 'Friendship' }].map(({ icon: Icon, label }) => (
-                  <button key={label} className="flex items-center gap-1.5 px-3 py-2 rounded-xl dark:bg-white/5 bg-white border dark:border-white/8 border-gray-200 text-xs font-semibold dark:text-gray-300 text-gray-700 hover:border-fuchsia-500/40 hover:text-fuchsia-500 transition-all">
-                    <Icon className="w-3.5 h-3.5" /> {label}
-                  </button>
-                ))}
+              <div className="text-center max-w-xs">
+                <p className="text-sm sm:text-base dark:text-gray-300 text-gray-600 mb-1">
+                  {phase === 'spinning' ? '🎲 Finding your match...' : '🎡 Spin to meet someone amazing!'}
+                </p>
+                <p className="text-xs dark:text-gray-500 text-gray-400">
+                  {poolProfiles.length} people ready to connect {dbConnected ? '· Live' : '· Demo mode'}
+                </p>
               </div>
 
               <motion.button onClick={spin} disabled={phase === 'spinning'}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white font-black text-lg shadow-2xl shadow-fuchsia-500/30 disabled:opacity-60 disabled:cursor-not-allowed">
+                className="relative px-10 py-4 rounded-2xl bg-love-gradient text-white font-black text-base sm:text-lg shadow-2xl shadow-pink-500/40 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden">
                 {phase === 'spinning' ? (
-                  <><RefreshCw className="w-5 h-5 animate-spin" /> Finding someone…</>
+                  <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5 animate-spin" /> Spinning...</span>
                 ) : (
-                  <><Zap className="w-5 h-5" /> Spin & Match!</>
+                  <span className="flex items-center gap-2"><Zap className="w-5 h-5" /> Spin & Match!</span>
                 )}
               </motion.button>
-              <p className="text-xs dark:text-gray-500 text-gray-400 mt-3">Double-tap to skip · All chats are monitored for safety</p>
+
+              {/* Stats row */}
+              <div className="flex items-center gap-4 sm:gap-6 text-center">
+                {[
+                  { icon: Globe, label: 'Countries', value: '54+', color: 'text-blue-500' },
+                  { icon: Heart, label: 'Online Now', value: poolProfiles.filter(p => p.online).length.toString() || '...' , color: 'text-pink-500' },
+                  { icon: Shield, label: 'Safe', value: '100%', color: 'text-emerald-500' },
+                ].map(stat => (
+                  <div key={stat.label} className="flex flex-col items-center gap-1">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl dark:bg-white/5 bg-white border dark:border-white/8 border-gray-200 flex items-center justify-center`}>
+                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                    </div>
+                    <p className="font-black text-sm dark:text-white text-gray-900">{stat.value}</p>
+                    <p className="text-[10px] dark:text-gray-500 text-gray-400">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           )}
 
-          {/* ── MATCHED phase ── */}
+          {/* ── Matched Phase ── */}
           {phase === 'matched' && currentProfile && (
             <motion.div key="matched" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-full py-8 px-4">
+              className="h-full overflow-y-auto flex flex-col items-center px-4 py-6 gap-4">
 
-              {/* Match reveal */}
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="text-center mb-6">
-                <div className="text-6xl mb-3">🎉</div>
-                <h2 className="font-display font-black text-2xl dark:text-white text-gray-900 mb-1">You matched!</h2>
-                <p className="text-sm dark:text-gray-400 text-gray-500">Start chatting before the connection expires</p>
+              {/* Match banner */}
+              <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
+                className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Sparkles className="w-5 h-5 text-fuchsia-500" />
+                  <h2 className="font-display font-black text-xl text-fuchsia-500">It's a Match!</h2>
+                  <Sparkles className="w-5 h-5 text-fuchsia-500" />
+                </div>
+                <p className="text-xs dark:text-gray-400 text-gray-500">Say hi and start the conversation 👋</p>
               </motion.div>
 
               {/* Profile card */}
-              <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-                className="dark:bg-[#130E1E] bg-white rounded-3xl p-6 border dark:border-white/8 border-gray-100 shadow-2xl shadow-fuchsia-500/10 w-full max-w-sm mb-6 text-center">
-                <div className="w-20 h-20 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-5xl mx-auto mb-3">{currentProfile.emoji}</div>
-                <h3 className="font-display font-black text-xl dark:text-white text-gray-900">{currentProfile.name}, {currentProfile.age}</h3>
-                <p className="text-sm dark:text-gray-400 text-gray-500 mb-1">{currentProfile.flag} {currentProfile.country}</p>
-                <p className="text-sm dark:text-gray-300 text-gray-700 mb-4 leading-relaxed">{currentProfile.bio}</p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {currentProfile.interests.map(i => (
-                    <span key={i} className="text-xs px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-500 font-semibold">{i}</span>
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
+                className="w-full max-w-sm dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/8 border-gray-100 p-4 shadow-lg">
+                <div className="flex items-center gap-4">
+                  {currentProfile.avatar_url ? (
+                    <img src={currentProfile.avatar_url} alt={currentProfile.name} className="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-love-gradient flex items-center justify-center text-3xl flex-shrink-0">
+                      {currentProfile.emoji}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold dark:text-white text-gray-900">{anonymous ? 'Anonymous' : currentProfile.name}</h3>
+                      {currentProfile.online && <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[9px] font-bold">ONLINE</span>}
+                    </div>
+                    <p className="text-xs dark:text-gray-400 text-gray-500">{currentProfile.age} · {currentProfile.flag} {anonymous ? 'Somewhere' : currentProfile.country}</p>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {currentProfile.interests.slice(0, 3).map(tag => (
+                        <span key={tag} className="px-2 py-0.5 rounded-full dark:bg-white/5 bg-gray-100 text-[10px] dark:text-gray-300 text-gray-600">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {!anonymous && <p className="text-xs dark:text-gray-400 text-gray-500 mt-3 leading-relaxed">{currentProfile.bio}</p>}
+              </motion.div>
+
+              {/* Call buttons */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                className="flex items-center gap-3 w-full max-w-sm">
+                <button onClick={() => handleSpinCall('audio')}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-semibold text-sm hover:bg-emerald-500/20 transition-colors">
+                  <Phone className="w-4 h-4" /> Voice
+                </button>
+                <button onClick={() => handleSpinCall('video')}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-500 font-semibold text-sm hover:bg-blue-500/20 transition-colors">
+                  <Video className="w-4 h-4" /> Video
+                </button>
+              </motion.div>
+
+              {/* Chat section */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                className="w-full max-w-sm flex-1 flex flex-col dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/8 border-gray-100 overflow-hidden min-h-[240px]">
+                <div className="flex items-center gap-2 px-4 py-3 border-b dark:border-white/5 border-gray-100">
+                  <MessageCircle className="w-4 h-4 text-fuchsia-500" />
+                  <span className="text-sm font-semibold dark:text-white text-gray-900">Chat</span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                  {messages.map((m, i) => (
+                    <div key={i} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs ${m.mine ? 'bg-love-gradient text-white rounded-tr-sm' : 'dark:bg-white/8 bg-gray-100 dark:text-white text-gray-900 rounded-tl-sm'}`}>
+                        {m.text}
+                        <div className="text-[9px] opacity-60 mt-0.5 text-right">{m.time}</div>
+                      </div>
+                    </div>
                   ))}
+                </div>
+                <div className="px-3 py-2.5 border-t dark:border-white/5 border-gray-100 flex items-center gap-2">
+                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMsg()}
+                    placeholder="Say hello..." className="flex-1 bg-transparent text-xs dark:text-white text-gray-900 placeholder:text-gray-400 focus:outline-none" />
+                  <button onClick={sendMsg} disabled={!input.trim()} className="w-7 h-7 rounded-lg bg-love-gradient flex items-center justify-center disabled:opacity-40">
+                    <Send className="w-3 h-3 text-white" />
+                  </button>
                 </div>
               </motion.div>
 
-              {/* Actions */}
-              <div className="flex gap-3 w-full max-w-sm">
-                <button onClick={reset}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl dark:bg-white/5 bg-gray-100 dark:text-gray-300 text-gray-700 font-bold hover:text-red-400 transition-colors">
+              {/* Action buttons */}
+              <div className="flex items-center gap-3 w-full max-w-sm pb-2">
+                <button onClick={() => { setPhase('skipped'); reset() }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 font-semibold text-sm hover:text-red-400 transition-colors">
                   <X className="w-4 h-4" /> Skip
                 </button>
-                <button onClick={() => setPhase('chatting')}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white font-bold shadow-lg shadow-fuchsia-500/25">
-                  <MessageCircle className="w-4 h-4" /> Start Chat
+                <button onClick={spin}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-love-gradient text-white font-semibold text-sm hover:opacity-90 transition-opacity">
+                  <RefreshCw className="w-4 h-4" /> Spin Again
+                </button>
+                <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-500 font-semibold text-sm hover:bg-fuchsia-500/20 transition-colors">
+                  <Heart className="w-4 h-4" /> Connect
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* ── CHATTING phase ── */}
-          {phase === 'chatting' && currentProfile && (
-            <motion.div key="chatting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full">
-              {/* Chat header */}
-              <div className="flex items-center gap-3 px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0">
-                <div className="w-10 h-10 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-xl">
-                  {anonymous ? '🎭' : currentProfile.emoji}
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-sm dark:text-white text-gray-900">
-                    {anonymous ? 'Anonymous User' : currentProfile.name}
-                    {anonymous && <span className="ml-2 text-[10px] font-semibold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full">ANON</span>}
-                  </p>
-                  <p className="text-xs text-emerald-500">🟢 Online · Spin match</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleSpinCall('audio')}
-                    className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-emerald-500/20 hover:text-emerald-500 transition-colors"
-                    title="Voice call"
-                  >
-                    <Phone className="w-3.5 h-3.5 dark:text-gray-400 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() => handleSpinCall('video')}
-                    className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:bg-fuchsia-500/20 hover:text-fuchsia-500 transition-colors"
-                    title="Video call"
-                  >
-                    <Video className="w-3.5 h-3.5 dark:text-gray-400 text-gray-600" />
-                  </button>
-                  <button onClick={reset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl dark:bg-white/5 bg-gray-100 text-xs font-semibold dark:text-gray-400 text-gray-600 hover:text-brand-pink transition-colors">
-                    <RefreshCw className="w-3.5 h-3.5" /> New Spin
-                  </button>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-                {messages.map((msg, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.mine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.mine ? 'bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white rounded-br-sm' : 'dark:bg-[#1E1530] bg-white dark:text-gray-100 text-gray-900 border dark:border-white/6 border-gray-100 rounded-bl-sm'}`}>
-                      {msg.text}
-                      <div className={`text-[10px] mt-1 opacity-60 ${msg.mine ? 'text-right' : 'text-left'}`}>{msg.time}</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Input */}
-              <div className="flex items-center gap-2 px-3 py-3 dark:bg-[#0D0A14] bg-white border-t dark:border-white/6 border-gray-100 flex-shrink-0">
-                <button className="w-9 h-9 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <Smile className="w-4 h-4 dark:text-gray-400 text-gray-600" />
-                </button>
-                <input value={input} onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), sendMsg())}
-                  placeholder="Say something nice…"
-                  className="flex-1 px-4 py-2.5 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 dark:text-white text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-fuchsia-500 transition-colors" />
-                <button onClick={sendMsg} className="w-10 h-10 rounded-xl bg-gradient-to-r from-fuchsia-500 to-pink-600 flex items-center justify-center shadow-md flex-shrink-0">
-                  <Send className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
     </div>
