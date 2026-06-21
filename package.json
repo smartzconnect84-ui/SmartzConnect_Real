@@ -2,7 +2,7 @@
   "name": "smartzconnect",
   "version": "0.0.0",
   "type": "module",
-  "engines": {
+  "scripts": {
     "node": "20.x"
   },
   "scripts": {
