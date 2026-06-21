@@ -9,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useLiveChat } from '@/contexts/LiveChatContext'
 import { Sun, Moon, Menu } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import { supabase } from '@/lib/supabase'
 
 const primaryNav = [

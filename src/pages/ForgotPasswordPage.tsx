@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart, Mail, ArrowLeft, Loader2, CheckCircle2, Send } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import { useAuth } from '@/hooks/useAuth'
 import TurnstileWidget from '@/components/TurnstileWidget'
 

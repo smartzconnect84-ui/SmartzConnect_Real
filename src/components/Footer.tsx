@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Heart, Globe, Shield, Zap, MessageCircle, ExternalLink } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 
 const footerLinks = {
   Platform: [

@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase'
+
 const appId = import.meta.env.VITE_ONESIGNAL_APP_ID as string
 
 const PROD_HOSTNAME = 'smartzconnect.com'
@@ -79,7 +81,6 @@ export async function sendPushNotification({
   message: string
   url?: string
 }) {
-  const { supabase } = await import('@/lib/supabase')
   try {
     await supabase.functions.invoke('send-push', {
       body: { userId, title, message, url },

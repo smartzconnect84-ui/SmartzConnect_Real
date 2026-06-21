@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart, Mail, RefreshCw, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function VerifyEmailPage() {

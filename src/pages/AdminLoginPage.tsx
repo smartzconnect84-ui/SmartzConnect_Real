@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, Shield, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()

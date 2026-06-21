@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import TurnstileWidget from '@/components/TurnstileWidget'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 
 const TURNSTILE_ENABLED = !!import.meta.env.VITE_TURNSTILE_SITE_KEY
 

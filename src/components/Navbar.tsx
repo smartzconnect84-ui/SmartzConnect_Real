@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon, Menu, X, ChevronDown, Tv, ShoppingBag, Car, Package, Megaphone, MessageCircle } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLiveChat } from '@/contexts/LiveChatContext'
 

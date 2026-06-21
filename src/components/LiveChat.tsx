@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Minimize2, Maximize2, Phone, ExternalLink, Bot, User, ChevronDown } from 'lucide-react'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import { useLiveChat } from '@/contexts/LiveChatContext'
 
 interface ChatMessage {

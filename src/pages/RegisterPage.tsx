@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check, ArrowLeft, Globe } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 import TurnstileWidget from '@/components/TurnstileWidget'
 
 const TURNSTILE_ENABLED = !!import.meta.env.VITE_TURNSTILE_SITE_KEY

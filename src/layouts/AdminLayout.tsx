@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLiveChat } from '@/contexts/LiveChatContext'
-import logoImg from '@/assets/logo.png'
+const logoImg = '/logo.png'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard',      path: '/admin',                 end: true },
