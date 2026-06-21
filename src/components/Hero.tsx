@@ -3,19 +3,36 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Heart, Play, Star, Users, MapPin } from 'lucide-react'
 
-const slides = [
+interface Slide {
+  image: string
+  imgClass: string
+  objectPosition: string
+  badge: string
+  headline: string
+  sub: string
+  cta: string
+  ctaLink: string
+  stat: { icon: React.ElementType; value: string; label: string }
+}
+
+const slides: Slide[] = [
   {
     image: '/flyer.png',
+    // Portrait poster — always contain so every character & text is visible
+    imgClass: 'object-contain',
+    objectPosition: 'center top',
     badge: '🎉 Birthday Bash & App Launch — June 26, 2026',
     headline: 'SmartzConnect\nLaunches in Liberia',
-    sub: 'Join us at Bash Pool, Marshall Road on June 26 as we officially launch Africa\'s #1 social platform. Be part of history.',
+    sub: "Join us at Bash Pool, Marshall Road on June 26 as we officially launch Africa's #1 social platform. Be part of history.",
     cta: 'Join Free Today',
     ctaLink: '/register',
     stat: { icon: Star, value: 'Launch', label: 'June 26, 2026' },
   },
   {
     image: '/hero-friends.jpg',
-    badge: '🌍 Africa\'s #1 Social Platform',
+    imgClass: 'object-cover',
+    objectPosition: 'center 25%',   // keep faces in frame
+    badge: "🌍 Africa's #1 Social Platform",
     headline: 'Where Friendships\nBecome Forever',
     sub: 'Join Africans building real connections, sharing moments, and creating memories that last a lifetime.',
     cta: 'Find Your People',
@@ -24,6 +41,8 @@ const slides = [
   },
   {
     image: '/hero-date.jpg',
+    imgClass: 'object-cover',
+    objectPosition: 'center 20%',
     badge: '💕 Smart Matching Technology',
     headline: 'Your Perfect Match\nIs Waiting',
     sub: 'Our AI-powered matching engine analyses compatibility factors to connect you with someone truly special.',
@@ -33,6 +52,8 @@ const slides = [
   },
   {
     image: '/hero-couple.jpg',
+    imgClass: 'object-cover',
+    objectPosition: 'center 20%',
     badge: '👑 Love Stories Across Africa',
     headline: 'Real Love,\nReal Connections',
     sub: 'From Monrovia to Lagos, Nairobi to Accra — SmartzConnect is where African love stories begin and flourish.',
@@ -42,6 +63,8 @@ const slides = [
   },
   {
     image: '/hero-scroll.jpg',
+    imgClass: 'object-cover',
+    objectPosition: 'center 30%',
     badge: '📱 Scroll, Connect, Vibe',
     headline: 'Your Social Feed,\nYour World',
     sub: 'Share your life, discover trending content, go live on SmartzTV, and stay connected with your community 24/7.',
@@ -51,9 +74,11 @@ const slides = [
   },
   {
     image: '/hero-networking.jpg',
+    imgClass: 'object-cover',
+    objectPosition: 'center 25%',
     badge: '🤝 Professional Networking',
     headline: 'Connect, Grow &\nThrive Together',
-    sub: 'Build your professional network, discover opportunities, and collaborate with Africa\'s brightest minds on one platform.',
+    sub: "Build your professional network, discover opportunities, and collaborate with Africa's brightest minds on one platform.",
     cta: 'Build Your Network',
     ctaLink: '/register',
     stat: { icon: MapPin, value: '47+', label: 'Countries' },
@@ -77,7 +102,7 @@ export default function Hero() {
   const StatIcon = slide.stat.icon
 
   return (
-    <section className="relative w-full h-screen min-h-[560px] max-h-[900px] overflow-hidden">
+    <section className="relative w-full h-[90vh] sm:h-screen min-h-[580px] max-h-[960px] overflow-hidden bg-[#0A0710]">
 
       {/* ── Slides ── */}
       <AnimatePresence mode="sync">
@@ -87,15 +112,17 @@ export default function Hero() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="absolute inset-0"
+          className="absolute inset-0 bg-[#0A0710]"
         >
           <img
             src={slide.image}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700"
+            className={`absolute inset-0 w-full h-full transition-transform duration-700 ${slide.imgClass}`}
+            style={{ objectPosition: slide.objectPosition }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/10" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
+          {/* Gradient overlay — stronger on mobile so text stays readable */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/10 sm:from-black/70 sm:via-black/35 sm:to-black/10" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
         </motion.div>
       </AnimatePresence>
 

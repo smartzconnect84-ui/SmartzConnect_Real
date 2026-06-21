@@ -105,15 +105,20 @@ export default function ChatPage() {
     const channelName = `messages:${[user.id, id].sort().join('-')}`
     const channel = supabase
       .channel(channelName)
+      // Server-side filter: only receive messages where I am the recipient
+      // (sent messages use optimistic UI so no need to receive them back)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
         (payload) => {
           const m = payload.new as any
-          const isMine = m.sender_id === user.id
-          const isTheirs = m.sender_id === id
-          // Only handle messages in this conversation
-          if (!((isMine && m.receiver_id === id) || (isTheirs && m.receiver_id === user.id))) return
+          // Only handle messages from this specific conversation partner
+          if (m.sender_id !== id) return
           // Skip duplicates (optimistic inserts already in state)
           setMessages(prev => {
             if (prev.some(msg => msg.id === String(m.id))) return prev
@@ -121,7 +126,7 @@ export default function ChatPage() {
               id: String(m.id),
               text: m.content || '',
               time: new Date(m.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }),
-              mine: isMine,
+              mine: false,
               status: 'read' as const,
               type: (m.type || 'text') as Message['type'],
             }]
@@ -130,13 +135,21 @@ export default function ChatPage() {
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'messages' },
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+        },
         (payload) => {
           const old = payload.old as any
           setMessages(prev => prev.filter(msg => msg.id !== String(old.id)))
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('Chat realtime channel error — will retry on reconnect')
+        }
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [user?.id, id])
