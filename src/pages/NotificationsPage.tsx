@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Heart, MessageCircle, Users, Zap, Check, Trash2, Filter, RefreshCw, Database } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Notification {
   id: string; type: 'match' | 'like' | 'message' | 'group' | 'system' | 'promo' | 'spin'
@@ -27,10 +28,74 @@ const typeConfig: Record<string, { color: string; bg: string }> = {
 }
 
 export default function NotificationsPage() {
+  const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [activeTab, setActiveTab] = useState('all')
   const [loading, setLoading] = useState(true)
   const [dbConnected, setDbConnected] = useState(false)
+
+  // ── Realtime: Postgres Changes on notifications ─────────────────────────
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const n = payload.new as any
+          const mapped: Notification = {
+            id: String(n.id),
+            type: n.type || 'system',
+            title: n.title || 'Notification',
+            body: n.body || n.message || '',
+            time: new Date(n.created_at).toLocaleDateString(),
+            read: n.read ?? false,
+            emoji: n.emoji || '🔔',
+            action: n.action_url,
+          }
+          setNotifications(prev => [mapped, ...prev])
+          setDbConnected(true)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const n = payload.new as any
+          setNotifications(prev =>
+            prev.map(notif => notif.id === String(n.id) ? { ...notif, read: n.read } : notif)
+          )
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const old = payload.old as any
+          setNotifications(prev => prev.filter(notif => notif.id !== String(old.id)))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user?.id])
 
   const fetchNotifications = async () => {
     setLoading(true)

@@ -98,6 +98,49 @@ export default function ChatPage() {
 
   useEffect(() => { fetchData() }, [id, user?.id])
 
+  // ── Realtime: Postgres Changes on messages ──────────────────────────────
+  useEffect(() => {
+    if (!user?.id || !id) return
+
+    const channelName = `messages:${[user.id, id].sort().join('-')}`
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          const m = payload.new as any
+          const isMine = m.sender_id === user.id
+          const isTheirs = m.sender_id === id
+          // Only handle messages in this conversation
+          if (!((isMine && m.receiver_id === id) || (isTheirs && m.receiver_id === user.id))) return
+          // Skip duplicates (optimistic inserts already in state)
+          setMessages(prev => {
+            if (prev.some(msg => msg.id === String(m.id))) return prev
+            return [...prev, {
+              id: String(m.id),
+              text: m.content || '',
+              time: new Date(m.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }),
+              mine: isMine,
+              status: 'read' as const,
+              type: (m.type || 'text') as Message['type'],
+            }]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'messages' },
+        (payload) => {
+          const old = payload.old as any
+          setMessages(prev => prev.filter(msg => msg.id !== String(old.id)))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user?.id, id])
+
   const send = async () => {
     if (!input.trim()) return
     const newMsg: Message = {

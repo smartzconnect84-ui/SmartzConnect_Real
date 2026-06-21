@@ -74,6 +74,46 @@ export default function MatchesPage() {
 
   useEffect(() => { fetchMatches() }, [])
 
+  // ── Realtime: Postgres Changes on matches ───────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('matches:mine')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'matches' },
+        (payload) => {
+          const m = payload.new as any
+          const profile = m.profiles || {}
+          const newMatch: Match = {
+            id: String(m.user2_id || m.user_b || m.id),
+            name: profile.full_name || 'New Match',
+            emoji: '💕',
+            online: false,
+            unread: 1,
+            matchScore: 95,
+            lastTime: new Date(m.matched_at || m.created_at).toLocaleDateString(),
+            mutualInterests: [],
+          }
+          setMatches(prev => [newMatch, ...prev])
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload) => {
+          const updated = payload.new as any
+          setMatches(prev => prev.map(m =>
+            m.id === String(updated.user2_id || updated.user_b || updated.id)
+              ? { ...m, online: updated.is_online ?? m.online }
+              : m
+          ))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
   const filtered = matches.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
       (m.country || '').toLowerCase().includes(search.toLowerCase())
