@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Ban, CheckCircle, Shield, Crown, Zap, Eye, MoreVertical, UserX, RefreshCw, Download } from 'lucide-react'
+import { Search, Ban, CheckCircle, Crown, Zap, Eye, MoreVertical, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface User {
   id: number
   email: string
-  name: string
+  full_name: string | null
   role: string
   email_verified: boolean
   subscription_tier: string | null
@@ -14,13 +14,10 @@ interface User {
   is_verified: boolean
   created_at: string
   country: string | null
-  age: number | null
-  gender: string | null
-  last_seen: string | null
 }
 
 const tierBadge = (tier: string | null) => {
-  if (tier === 'vip') return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-500 border border-amber-500/25 flex items-center gap-1"><Crown className="w-2.5 h-2.5" />VIP</span>
+  if (tier === 'vip')     return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-500 border border-amber-500/25 flex items-center gap-1"><Crown className="w-2.5 h-2.5" />VIP</span>
   if (tier === 'premium') return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-500/15 text-pink-500 border border-pink-500/25 flex items-center gap-1"><Zap className="w-2.5 h-2.5" />Premium</span>
   return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-500">Free</span>
 }
@@ -28,8 +25,8 @@ const tierBadge = (tier: string | null) => {
 const roleBadge = (role: string) => {
   const map: Record<string, string> = {
     superadmin: 'bg-red-500/15 text-red-500 border-red-500/25',
-    admin: 'bg-orange-500/15 text-orange-500 border-orange-500/25',
-    user: 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-500 dark:border-white/8 border-gray-200',
+    admin:      'bg-orange-500/15 text-orange-500 border-orange-500/25',
+    user:       'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-500 dark:border-white/8 border-gray-200',
   }
   return <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${map[role] || map.user}`}>{role}</span>
 }
@@ -46,10 +43,10 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     setLoading(true)
     let q = supabase.from('users').select('*', { count: 'exact' }).order('created_at', { ascending: false })
-    if (search) q = q.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
-    if (filter === 'banned') q = q.eq('is_banned', true)
+    if (search) q = q.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`)
+    if (filter === 'banned')  q = q.eq('is_banned', true)
     if (filter === 'verified') q = q.eq('is_verified', true)
-    if (filter === 'vip') q = q.eq('subscription_tier', 'vip')
+    if (filter === 'vip')     q = q.eq('subscription_tier', 'vip')
     if (filter === 'premium') q = q.eq('subscription_tier', 'premium')
     const { data, count } = await q.limit(100)
     setUsers(data || [])
@@ -62,15 +59,15 @@ export default function AdminUsers() {
   const doAction = async (action: string, userId: number) => {
     setActionLoading(true)
     const updates: Record<string, any> = {
-      ban: { is_banned: true },
-      unban: { is_banned: false },
-      verify: { is_verified: true, email_verified: true },
-      unverify: { is_verified: false },
-      make_admin: { role: 'admin' },
-      make_user: { role: 'user' },
-      grant_vip: { subscription_tier: 'vip' },
-      grant_premium: { subscription_tier: 'premium' },
-      revoke_sub: { subscription_tier: null },
+      ban:          { is_banned: true },
+      unban:        { is_banned: false },
+      verify:       { is_verified: true, email_verified: true },
+      unverify:     { is_verified: false },
+      make_admin:   { role: 'admin' },
+      make_user:    { role: 'user' },
+      grant_vip:    { subscription_tier: 'vip' },
+      grant_premium:{ subscription_tier: 'premium' },
+      revoke_sub:   { subscription_tier: null },
     }
     if (updates[action]) {
       await supabase.from('users').update(updates[action]).eq('id', userId)
@@ -82,14 +79,13 @@ export default function AdminUsers() {
 
   const stats = [
     { label: 'Total Users', value: total, color: 'text-brand-pink' },
-    { label: 'Banned', value: users.filter(u => u.is_banned).length, color: 'text-red-500' },
-    { label: 'VIP', value: users.filter(u => u.subscription_tier === 'vip').length, color: 'text-amber-500' },
-    { label: 'Verified', value: users.filter(u => u.is_verified).length, color: 'text-emerald-500' },
+    { label: 'Banned',  value: users.filter(u => u.is_banned).length, color: 'text-red-500' },
+    { label: 'VIP',     value: users.filter(u => u.subscription_tier === 'vip').length, color: 'text-amber-500' },
+    { label: 'Verified',value: users.filter(u => u.is_verified).length, color: 'text-emerald-500' },
   ]
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display font-black text-2xl dark:text-white text-gray-900">User Management</h1>
@@ -100,7 +96,6 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(s => (
           <div key={s.label} className="dark:bg-[#130E1E] bg-white rounded-2xl p-4 border dark:border-white/6 border-gray-200">
@@ -110,7 +105,6 @@ export default function AdminUsers() {
         ))}
       </div>
 
-      {/* Search + Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 dark:text-gray-500 text-gray-400" />
@@ -127,7 +121,6 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
@@ -153,15 +146,15 @@ export default function AdminUsers() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-love-gradient flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {(u.name || u.email || '?')[0].toUpperCase()}
+                          {(u.full_name || u.email || '?')[0].toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold dark:text-white text-gray-900 truncate text-sm">{u.name || '—'}</p>
+                          <p className="font-semibold dark:text-white text-gray-900 truncate text-sm">{u.full_name || '—'}</p>
                           <p className="text-xs dark:text-gray-500 text-gray-400 truncate">{u.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">{roleBadge(u.role)}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell">{roleBadge(u.role || 'user')}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{tierBadge(u.subscription_tier)}</td>
                     <td className="px-4 py-3 hidden lg:table-cell text-xs dark:text-gray-400 text-gray-500">
                       {new Date(u.created_at).toLocaleDateString()}
@@ -197,7 +190,6 @@ export default function AdminUsers() {
         )}
       </div>
 
-      {/* Action drawer */}
       {selected && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setSelected(null)}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -205,10 +197,10 @@ export default function AdminUsers() {
             className="w-full max-w-sm dark:bg-[#1A1228] bg-white rounded-3xl p-6 border dark:border-white/8 border-gray-200 shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-love-gradient flex items-center justify-center text-white font-bold text-lg">
-                {(selected.name || selected.email || '?')[0].toUpperCase()}
+                {(selected.full_name || selected.email || '?')[0].toUpperCase()}
               </div>
               <div>
-                <p className="font-bold dark:text-white text-gray-900">{selected.name || '—'}</p>
+                <p className="font-bold dark:text-white text-gray-900">{selected.full_name || '—'}</p>
                 <p className="text-xs dark:text-gray-400 text-gray-500">{selected.email}</p>
               </div>
             </div>
@@ -220,12 +212,12 @@ export default function AdminUsers() {
                 { label: '👑 Grant VIP', action: 'grant_vip' },
                 { label: '💕 Grant Premium', action: 'grant_premium' },
                 { label: '🔓 Revoke Plan', action: 'revoke_sub' },
-                { label: selected.role === 'admin' ? '👤 Make User' : '🛡️ Make Admin', action: selected.role === 'admin' ? 'make_user' : 'make_admin' },
+                { label: (selected.role === 'admin' || selected.role === 'superadmin') ? '👤 Make User' : '🛡️ Make Admin', action: (selected.role === 'admin' || selected.role === 'superadmin') ? 'make_user' : 'make_admin' },
               ].map(btn => (
                 <button key={btn.action} disabled={actionLoading}
                   onClick={() => doAction(btn.action, selected.id)}
                   className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-all ${btn.danger ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20' : 'dark:bg-white/5 bg-gray-100 dark:text-white text-gray-900 hover:dark:bg-white/10 hover:bg-gray-200 border dark:border-white/8 border-gray-200'}`}>
-                  {btn.label}
+                  {actionLoading ? '...' : btn.label}
                 </button>
               ))}
             </div>

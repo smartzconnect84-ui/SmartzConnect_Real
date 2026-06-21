@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { RefreshCw, Search, Eye, Trash2, Flag, CheckCircle, Image, Video, FileText } from 'lucide-react'
+import { RefreshCw, Search, Eye, Trash2, CheckCircle, Image, Video, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface Post {
@@ -9,7 +9,7 @@ interface Post {
   content: string | null
   image_url: string | null
   video_url: string | null
-  post_type: string
+  type: string
   likes_count: number
   comments_count: number
   is_deleted: boolean
@@ -26,7 +26,7 @@ export default function AdminContent() {
   const fetchPosts = async () => {
     setLoading(true)
     let q = supabase.from('posts').select('*').order('created_at', { ascending: false })
-    if (typeFilter !== 'all') q = q.eq('post_type', typeFilter)
+    if (typeFilter !== 'all') q = q.eq('type', typeFilter)
     const { data } = await q.limit(100)
     setPosts(data || [])
     setLoading(false)
@@ -83,7 +83,7 @@ export default function AdminContent() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search posts..."
             className="w-full pl-9 pr-4 py-2.5 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 dark:text-white text-gray-900 text-sm focus:outline-none focus:border-brand-pink" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {['all', 'text', 'image', 'video'].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${typeFilter === t ? 'bg-love-gradient text-white' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 hover:text-brand-pink'}`}>
@@ -145,7 +145,7 @@ export default function AdminContent() {
             <h3 className="font-display font-black text-xl dark:text-white text-gray-900 mb-4">Post #{selected.id}</h3>
             <div className="space-y-3 mb-5 text-sm">
               <div className="flex justify-between"><span className="dark:text-gray-400 text-gray-500">Author</span><span className="font-mono dark:text-white text-gray-900">User #{selected.user_id}</span></div>
-              <div className="flex justify-between"><span className="dark:text-gray-400 text-gray-500">Type</span><span className="capitalize dark:text-white text-gray-900">{selected.post_type}</span></div>
+              <div className="flex justify-between"><span className="dark:text-gray-400 text-gray-500">Type</span><span className="capitalize dark:text-white text-gray-900">{selected.type}</span></div>
               <div className="flex justify-between"><span className="dark:text-gray-400 text-gray-500">Likes</span><span className="dark:text-white text-gray-900">{selected.likes_count}</span></div>
               {selected.content && (
                 <div className="p-3 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 text-xs dark:text-gray-300 text-gray-700">{selected.content}</div>
