@@ -130,9 +130,26 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.read).length
   const filtered = notifications.filter(n => activeTab === 'all' || n.type === activeTab)
 
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-  const deleteNotif = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id))
-  const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  const markAllRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (dbConnected && user?.id) {
+      await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
+    }
+  }
+
+  const deleteNotif = async (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+    if (dbConnected) {
+      await supabase.from('notifications').delete().eq('id', id)
+    }
+  }
+
+  const markRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    if (dbConnected) {
+      await supabase.from('notifications').update({ read: true }).eq('id', id)
+    }
+  }
 
   return (
     <div className="h-full overflow-y-auto dark:bg-[#0A0710] bg-gray-50">

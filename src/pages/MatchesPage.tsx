@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Heart, MessageCircle, Star, MapPin, Wifi, WifiOff, Filter, X, Sparkles, Database, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Match {
   id: string; name: string; age?: number; emoji?: string; avatar_url?: string
@@ -16,6 +17,7 @@ const tabs = ['All', 'Online', 'Unread', 'New']
 const defaultEmojis = ['👩🏾', '👨🏿', '👩🏽', '👨🏾', '👩🏿', '👨🏽']
 
 export default function MatchesPage() {
+  const { user } = useAuth()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [dbConnected, setDbConnected] = useState(false)
@@ -74,19 +76,25 @@ export default function MatchesPage() {
 
   useEffect(() => { fetchMatches() }, [])
 
-  // ── Realtime: Postgres Changes on matches ───────────────────────────────
+  // ── Realtime: Postgres Changes on matches (scoped to current user) ─────
   useEffect(() => {
+    if (!user?.id) return
+
     const channel = supabase
-      .channel('matches:mine')
+      .channel(`matches:mine:${user.id}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'matches' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'matches',
+          filter: `user1_id=eq.${user.id}`,
+        },
         (payload) => {
           const m = payload.new as any
-          const profile = m.profiles || {}
           const newMatch: Match = {
-            id: String(m.user2_id || m.user_b || m.id),
-            name: profile.full_name || 'New Match',
+            id: String(m.user2_id || m.id),
+            name: 'New Match',
             emoji: '💕',
             online: false,
             unread: 1,
@@ -99,20 +107,29 @@ export default function MatchesPage() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'matches',
+          filter: `user1_id=eq.${user.id}`,
+        },
         (payload) => {
           const updated = payload.new as any
           setMatches(prev => prev.map(m =>
-            m.id === String(updated.user2_id || updated.user_b || updated.id)
+            m.id === String(updated.user2_id || updated.id)
               ? { ...m, online: updated.is_online ?? m.online }
               : m
           ))
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('Matches realtime channel error — will retry on reconnect')
+        }
+      })
 
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [user?.id])
 
   const filtered = matches.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
