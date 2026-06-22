@@ -693,29 +693,48 @@ do $$ begin create policy "invoices_select_own" on public.invoices for select us
 -- ║  SECTION 8 — CONTENT & ADMIN                                             ║
 -- ╚══════════════════════════════════════════════════════════════════════════╝
 
+-- blog_posts — columns match BlogPage.tsx query exactly:
+--   id, title, slug, excerpt, content, image_url, category, featured,
+--   author_name, author_role, read_time (text), tags, views_count,
+--   likes_count, status, published_at, created_at
 create table if not exists public.blog_posts (
   id           uuid primary key default gen_random_uuid(),
   author_id    uuid references auth.users(id) on delete set null,
+  author_name  text,
+  author_role  text,
   title        text not null,
-  slug         text unique,
+  slug         text unique not null,
   excerpt      text,
   content      text,
-  cover_url    text,
-  category     text,
+  image_url    text,
+  category     text default 'General',
   tags         text[],
+  featured     boolean default false,
   status       text default 'draft' check (status in ('draft','published','archived')),
   views_count  int default 0,
-  read_time    int default 5,
+  likes_count  int default 0,
+  read_time    text default '5 min read',
   published_at timestamptz,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
-create index if not exists blog_posts_status_idx on public.blog_posts(status, published_at desc);
+create index if not exists blog_posts_status_idx    on public.blog_posts(status, published_at desc);
+create index if not exists blog_posts_slug_idx      on public.blog_posts(slug);
+create index if not exists blog_posts_featured_idx  on public.blog_posts(featured) where status = 'published';
 alter table public.blog_posts enable row level security;
 do $$ begin create policy "blog_select_published" on public.blog_posts for select using (status = 'published'); exception when duplicate_object then null; end $$;
 do $$ begin create policy "blog_insert_auth"      on public.blog_posts for insert with check (auth.uid() is not null); exception when duplicate_object then null; end $$;
-do $$ begin create policy "blog_update_own"       on public.blog_posts for update using (auth.uid() = author_id); exception when duplicate_object then null; end $$;
+do $$ begin create policy "blog_update_auth"      on public.blog_posts for update using (auth.uid() is not null); exception when duplicate_object then null; end $$;
+do $$ begin create policy "blog_delete_auth"      on public.blog_posts for delete using (auth.uid() is not null); exception when duplicate_object then null; end $$;
 select public.apply_updated_at('blog_posts');
+
+-- Patch existing blog_posts tables (safe to run on already-created tables)
+do $$ begin alter table public.blog_posts add column if not exists author_name  text;            exception when others then null; end $$;
+do $$ begin alter table public.blog_posts add column if not exists author_role  text;            exception when others then null; end $$;
+do $$ begin alter table public.blog_posts add column if not exists image_url    text;            exception when others then null; end $$;
+do $$ begin alter table public.blog_posts add column if not exists featured     boolean default false; exception when others then null; end $$;
+do $$ begin alter table public.blog_posts add column if not exists likes_count  int default 0;  exception when others then null; end $$;
+do $$ begin alter table public.blog_posts alter column read_time type text using read_time::text; exception when others then null; end $$;
 
 -- ── Team Members — columns match TeamPage.tsx query exactly ──────────────────
 -- TeamPage queries: full_name, role, photo_url, country, bio, skills,

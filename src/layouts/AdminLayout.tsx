@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, CreditCard, Flag, BarChart3, Megaphone,
   ShoppingBag, Tv, Car, FileText, Shield, Settings, ChevronLeft,
   ChevronRight, Bell, Search, Moon, Sun, LogOut, Crown,
-  Users2, ScrollText, Menu, X, Map, MessageCircle
+  Users2, ScrollText, Menu, X, Map, MessageCircle, BookOpen
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLiveChat } from '@/contexts/LiveChatContext'
@@ -25,6 +25,7 @@ const navItems = [
   { icon: Megaphone,       label: 'Broadcasts',      path: '/admin/broadcasts' },
   { icon: Megaphone,       label: 'Advertisements',  path: '/admin/ads' },
   { icon: Users2,          label: 'Team',            path: '/admin/team' },
+  { icon: BookOpen,        label: 'Blog',            path: '/admin/blog' },
   { icon: Settings,        label: 'Settings',        path: '/admin/settings' },
   { icon: ScrollText,      label: 'Audit Logs',      path: '/admin/audit' },
   { icon: Map,             label: 'Page Tour',       path: '/admin/tour' },

@@ -49,6 +49,7 @@ import SmartzDeliveryPage  from '@/pages/public/SmartzDeliveryPage'
 import SmartzAdsPage       from '@/pages/public/SmartzAdsPage'
 import TeamPage            from '@/pages/public/TeamPage'
 import BlogPage            from '@/pages/public/BlogPage'
+import BlogPostPage        from '@/pages/public/BlogPostPage'
 import WorldStagePage      from '@/pages/public/WorldStagePage'
 
 import AdminDashboard      from '@/pages/admin/AdminDashboard'
@@ -65,6 +66,7 @@ import AdminSafety         from '@/pages/admin/AdminSafety'
 import AdminAds            from '@/pages/admin/AdminAds'
 import AdminSettings       from '@/pages/admin/AdminSettings'
 import AdminTeam           from '@/pages/admin/AdminTeam'
+import AdminBlog           from '@/pages/admin/AdminBlog'
 import AdminAuditLogs      from '@/pages/admin/AdminAuditLogs'
 import AdminCEO            from '@/pages/admin/AdminCEO'
 import AdminTour           from '@/pages/admin/AdminTour'
@@ -124,6 +126,7 @@ export default function App() {
               <Route path="/smartzads"      element={<PublicLayout><SmartzAdsPage /></PublicLayout>} />
               <Route path="/team"           element={<PublicLayout><TeamPage /></PublicLayout>} />
               <Route path="/blog"           element={<PublicLayout><BlogPage /></PublicLayout>} />
+              <Route path="/blog/:slug"     element={<PublicLayout><BlogPostPage /></PublicLayout>} />
               <Route path="/world-stage"    element={<PublicLayout><WorldStagePage /></PublicLayout>} />
 
               {/* App — protected */}
@@ -167,6 +170,7 @@ export default function App() {
                 <Route path="ads"           element={<AdminAds />} />
                 <Route path="settings"      element={<AdminSettings />} />
                 <Route path="team"          element={<AdminTeam />} />
+                <Route path="blog"          element={<AdminBlog />} />
                 <Route path="audit"         element={<AdminAuditLogs />} />
                 <Route path="ceo"           element={<AdminCEO />} />
                 <Route path="tour"          element={<AdminTour />} />
