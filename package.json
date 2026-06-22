@@ -2,8 +2,8 @@
   "name": "smartzconnect",
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "node": "20.x"
+  "engines": {
+    "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "vite",
