@@ -18,11 +18,15 @@ export async function connectStreamUser(
   avatarUrl?: string,
   token?: string
 ) {
-  if (!apiKey) return null
+  if (!apiKey || !token) return null
 
   try {
-    if (streamClient.userID) {
+    if (streamClient.userID === userId) {
       return streamClient
+    }
+
+    if (streamClient.userID) {
+      await streamClient.disconnectUser()
     }
 
     const user = {
@@ -31,12 +35,7 @@ export async function connectStreamUser(
       ...(avatarUrl ? { image: avatarUrl } : {}),
     }
 
-    if (token) {
-      await streamClient.connectUser(user, token)
-    } else {
-      await streamClient.connectUser(user, streamClient.devToken(userId))
-    }
-
+    await streamClient.connectUser(user, token)
     return streamClient
   } catch (err) {
     console.error('Stream connection error:', err)

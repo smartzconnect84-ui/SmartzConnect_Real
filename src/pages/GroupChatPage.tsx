@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, Users, Lock, Globe, Hash, Send, Smile, Mic, Crown, Shield, X } from 'lucide-react'
+import { Search, Plus, Users, Lock, Globe, Hash, Send, Smile, Mic, Crown, Shield, X, Loader2 } from 'lucide-react'
 
 interface Room {
   id: string; name: string; emoji: string; topic: string; members: number
@@ -8,7 +8,7 @@ interface Room {
   type: 'public' | 'private'; category: string; pinned?: boolean
 }
 
-const rooms: Room[] = [
+const initialRooms: Room[] = [
   { id: '1', name: 'Liberia Connect',      emoji: '🇱🇷', topic: 'Liberians worldwide',          members: 4820, online: 312, lastMsg: 'Anyone in Monrovia tonight?',       lastTime: '1m',  unread: 5,  type: 'public',  category: 'Country',  pinned: true },
   { id: '2', name: 'Africa Dating Tips',   emoji: '💕', topic: 'Relationship advice & tips',    members: 12400, online: 890, lastMsg: 'Communication is key in any…',    lastTime: '3m',  unread: 12, type: 'public',  category: 'Dating',   pinned: true },
   { id: '3', name: 'SmartzTV Creators',    emoji: '📺', topic: 'Live streaming tips & collabs', members: 3200, online: 145, lastMsg: 'My stream hit 1K viewers!!! 🎉',   lastTime: '8m',  unread: 0,  type: 'public',  category: 'Creators' },
@@ -30,13 +30,28 @@ const roomMessages = [
   { id: '6', author: 'You',        emoji: '😊', text: 'That sounds great! 🙌',                             time: '10:06', mine: true,  role: 'member' },
 ]
 
+const categoryEmojis: Record<string, string> = {
+  Dating: '💕', Country: '🌍', Music: '🎵', Culture: '🎭',
+  Business: '💼', Creators: '📺', VIP: '💎', Food: '🍽️',
+}
+
+interface CreateRoomForm {
+  name: string; topic: string; category: string; type: 'public' | 'private'; emoji: string
+}
+
 export default function GroupChatPage() {
+  const [rooms, setRooms] = useState<Room[]>(initialRooms)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeRoom, setActiveRoom] = useState<Room | null>(rooms[0])
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState(roomMessages)
   const [showMembers, setShowMembers] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateRoomForm>({
+    name: '', topic: '', category: 'Dating', type: 'public', emoji: '💬'
+  })
 
   const filtered = rooms.filter(r => {
     const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) || r.topic.toLowerCase().includes(search.toLowerCase())
@@ -49,8 +64,130 @@ export default function GroupChatPage() {
     setInput('')
   }
 
+  const handleCreateRoom = async () => {
+    if (!createForm.name.trim()) return
+    setCreating(true)
+    // Simulate async creation (replace with supabase insert when table exists)
+    await new Promise(r => setTimeout(r, 600))
+    const newRoom: Room = {
+      id: Date.now().toString(),
+      name: createForm.name.trim(),
+      emoji: createForm.emoji,
+      topic: createForm.topic.trim() || 'New room',
+      members: 1,
+      online: 1,
+      lastMsg: 'Room created!',
+      lastTime: 'now',
+      unread: 0,
+      type: createForm.type,
+      category: createForm.category,
+    }
+    setRooms(prev => [newRoom, ...prev])
+    setActiveRoom(newRoom)
+    setMessages([{ id: '1', author: 'Admin', emoji: '🛡️', text: `Welcome to ${newRoom.name}! You created this room.`, time: new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }), mine: false, role: 'admin' }])
+    setCreating(false)
+    setShowCreateModal(false)
+    setCreateForm({ name: '', topic: '', category: 'Dating', type: 'public', emoji: '💬' })
+  }
+
   return (
-    <div className="h-full flex dark:bg-[#0A0710] bg-gray-50">
+    <div className="h-full flex dark:bg-[#0A0710] bg-gray-50 relative">
+
+      {/* ── Create Room Modal ── */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => !creating && setShowCreateModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-x-4 bottom-4 sm:inset-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md z-50 dark:bg-[#130E1E] bg-white rounded-3xl border dark:border-white/10 border-gray-200 shadow-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-5 border-b dark:border-white/8 border-gray-100">
+                <div>
+                  <h3 className="font-bold dark:text-white text-gray-900">Create Room</h3>
+                  <p className="text-xs dark:text-gray-500 text-gray-400 mt-0.5">Start a new group chat community</p>
+                </div>
+                <button onClick={() => !creating && setShowCreateModal(false)}
+                  className="w-8 h-8 rounded-xl dark:bg-white/5 bg-gray-100 flex items-center justify-center hover:text-red-400 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Emoji + Name */}
+                <div className="flex gap-3">
+                  <div className="relative">
+                    <input
+                      value={createForm.emoji}
+                      onChange={e => setCreateForm(f => ({ ...f, emoji: e.target.value }))}
+                      maxLength={2}
+                      className="w-14 h-12 text-center text-2xl rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 focus:outline-none focus:border-brand-pink transition-colors"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      value={createForm.name}
+                      onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Room name (required)"
+                      maxLength={40}
+                      className="w-full h-12 px-4 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 dark:text-white text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-brand-pink transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Topic */}
+                <input
+                  value={createForm.topic}
+                  onChange={e => setCreateForm(f => ({ ...f, topic: e.target.value }))}
+                  placeholder="Room topic / description"
+                  maxLength={80}
+                  className="w-full px-4 py-3 rounded-xl dark:bg-white/5 bg-gray-50 border dark:border-white/8 border-gray-200 dark:text-white text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:border-brand-pink transition-colors"
+                />
+
+                {/* Category */}
+                <div>
+                  <label className="text-xs font-semibold dark:text-gray-400 text-gray-500 uppercase tracking-wider block mb-2">Category</label>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.slice(1).map(cat => (
+                      <button key={cat} onClick={() => setCreateForm(f => ({ ...f, category: cat }))}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${createForm.category === cat ? 'bg-love-gradient text-white' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 hover:text-brand-pink'}`}>
+                        {categoryEmojis[cat] || ''} {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Type */}
+                <div className="flex gap-3">
+                  {(['public', 'private'] as const).map(t => (
+                    <button key={t} onClick={() => setCreateForm(f => ({ ...f, type: t }))}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${createForm.type === t ? 'border-brand-pink bg-love-soft text-brand-pink' : 'dark:border-white/8 border-gray-200 dark:text-gray-400 text-gray-600 hover:border-brand-pink/50'}`}>
+                      {t === 'public' ? <><Globe className="w-4 h-4" /> Public</> : <><Lock className="w-4 h-4" /> Private</>}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleCreateRoom}
+                  disabled={!createForm.name.trim() || creating}
+                  className="w-full py-3 rounded-xl bg-love-gradient text-white font-bold text-sm shadow-md shadow-pink-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {creating
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</>
+                    : <><Plus className="w-4 h-4" /> Create Room</>
+                  }
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Room list ── */}
       <div className={`flex flex-col w-full lg:w-80 xl:w-96 flex-shrink-0 dark:bg-[#0D0A14] bg-white border-r dark:border-white/6 border-gray-100 ${activeRoom ? 'hidden lg:flex' : 'flex'}`}>
@@ -60,7 +197,11 @@ export default function GroupChatPage() {
               <h1 className="font-display font-black text-xl dark:text-white text-gray-900">Group Chats 💬</h1>
               <p className="text-xs dark:text-gray-400 text-gray-500">{rooms.length} active rooms</p>
             </div>
-            <button className="w-9 h-9 rounded-xl bg-love-gradient flex items-center justify-center shadow-md shadow-pink-500/20">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="w-9 h-9 rounded-xl bg-love-gradient flex items-center justify-center shadow-md shadow-pink-500/20 hover:opacity-90 transition-opacity"
+              title="Create room"
+            >
               <Plus className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -80,7 +221,16 @@ export default function GroupChatPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filtered.map((room, i) => (
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
+              <div className="text-4xl">🔍</div>
+              <p className="text-sm dark:text-gray-400 text-gray-500">No rooms found</p>
+              <button onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 rounded-xl bg-love-gradient text-white text-xs font-bold shadow-md shadow-pink-500/20">
+                Create one
+              </button>
+            </div>
+          ) : filtered.map((room, i) => (
             <motion.button key={room.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
               onClick={() => setActiveRoom(room)}
               className={`w-full flex items-center gap-3 px-4 py-3.5 hover:dark:bg-white/4 hover:bg-pink-50/50 transition-all border-b dark:border-white/4 border-gray-50 text-left ${activeRoom?.id === room.id ? 'dark:bg-white/6 bg-pink-50' : ''}`}>
@@ -210,7 +360,11 @@ export default function GroupChatPage() {
         <div className="flex-1 hidden lg:flex flex-col items-center justify-center text-center p-8">
           <div className="text-6xl mb-4">💬</div>
           <h3 className="font-display font-black text-xl dark:text-white text-gray-900 mb-2">Select a Room</h3>
-          <p className="text-sm dark:text-gray-400 text-gray-500">Join a group chat to connect with thousands of people</p>
+          <p className="text-sm dark:text-gray-400 text-gray-500 mb-5">Join a group chat to connect with thousands of people</p>
+          <button onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-love-gradient text-white text-sm font-bold shadow-md shadow-pink-500/20">
+            <Plus className="w-4 h-4" /> Create a Room
+          </button>
         </div>
       )}
     </div>

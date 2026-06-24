@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { connectStreamUser, disconnectStreamUser, streamClient } from '@/lib/stream'
 
 interface StreamContextType {
   connected: boolean
@@ -39,14 +40,16 @@ async function fetchStreamToken(userId: string, accessToken: string): Promise<st
 export function StreamProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth()
   const [connected, setConnected] = useState(false)
-  const [unreadCount] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
   const [userToken, setUserToken] = useState<string | null>(null)
   const [userName, setUserName] = useState<string | null>(null)
+  const unsubRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     if (!user || !session || !STREAM_API_KEY) {
       setConnected(false)
       setUserToken(null)
+      setUnreadCount(0)
       return
     }
 
@@ -62,14 +65,43 @@ export function StreamProvider({ children }: { children: ReactNode }) {
         if (cancelled) return
 
         const name = profile.data?.full_name || user.email || 'User'
+        const avatar = profile.data?.avatar_url || undefined
         setUserName(name)
 
         const token = await fetchStreamToken(user.id, session.access_token)
         if (cancelled) return
 
-        if (token) {
-          setUserToken(token)
+        if (!token) return
+
+        setUserToken(token)
+
+        const client = await connectStreamUser(user.id, name, avatar, token)
+        if (cancelled) {
+          await disconnectStreamUser()
+          return
+        }
+
+        if (client) {
           setConnected(true)
+
+          // Sync initial unread count
+          const countResp = await client.getUnreadCount()
+          if (!cancelled) setUnreadCount(countResp.total_unread_count ?? 0)
+
+          // Subscribe to real-time unread count changes
+          const handleEvent = (event: any) => {
+            if (
+              event.type === 'notification.message_new' ||
+              event.type === 'notification.mark_read' ||
+              event.type === 'message.new'
+            ) {
+              client.getUnreadCount().then((resp) => {
+                if (!cancelled) setUnreadCount(resp.total_unread_count ?? 0)
+              })
+            }
+          }
+          client.on(handleEvent)
+          unsubRef.current = () => client.off(handleEvent)
         }
       } catch {
         // Graceful degradation — Stream is optional
@@ -77,7 +109,17 @@ export function StreamProvider({ children }: { children: ReactNode }) {
     }
 
     setup()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      if (unsubRef.current) {
+        unsubRef.current()
+        unsubRef.current = null
+      }
+      disconnectStreamUser()
+      setConnected(false)
+      setUserToken(null)
+      setUnreadCount(0)
+    }
   }, [user?.id, session?.access_token])
 
   return (
@@ -94,3 +136,6 @@ export function StreamProvider({ children }: { children: ReactNode }) {
   )
 }
 
+export function useStream() {
+  return useContext(StreamContext)
+}

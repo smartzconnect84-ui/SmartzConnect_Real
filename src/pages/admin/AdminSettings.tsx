@@ -1,9 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Settings, ToggleLeft, ToggleRight, Globe, Shield, Bell, CreditCard,
   Smartphone, Save, RefreshCw, Palette, Sliders, Zap, Sun, Moon, Monitor
 } from 'lucide-react'
+
+const SETTINGS_KEY = 'smartz_admin_settings'
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveSettings(data: object) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(data))
+  } catch {}
+}
 
 interface Toggle {
   id: string; label: string; description: string; enabled: boolean; category: string
@@ -78,9 +95,22 @@ export default function AdminSettings() {
   const [borderRadius, setBorderRadius] = useState('rounded')
   const [fontScale, setFontScale] = useState('normal')
 
+  // Load persisted settings on mount
+  useEffect(() => {
+    const stored = loadSettings()
+    if (!stored) return
+    if (stored.toggles) setToggles(stored.toggles)
+    if (stored.selectedTheme) setSelectedTheme(stored.selectedTheme)
+    if (stored.selectedColor) setSelectedColor(stored.selectedColor)
+    if (stored.defaultMode) setDefaultMode(stored.defaultMode)
+    if (stored.borderRadius) setBorderRadius(stored.borderRadius)
+    if (stored.fontScale) setFontScale(stored.fontScale)
+  }, [])
+
   const toggle = (id: string) => setToggles(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t))
 
   const handleSave = () => {
+    saveSettings({ toggles, selectedTheme, selectedColor, defaultMode, borderRadius, fontScale })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }

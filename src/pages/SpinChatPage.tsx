@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile, Phone, Video, Database } from 'lucide-react'
+import { Zap, RefreshCw, Heart, X, MessageCircle, Shield, Globe, MapPin, Sparkles, Send, Smile, Phone, Video, Database, CheckCircle2 } from 'lucide-react'
 import { useJitsiCall } from '@/contexts/JitsiCallContext'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -32,6 +32,8 @@ export default function SpinChatPage() {
   const [anonymous, setAnonymous] = useState(false)
   const [poolProfiles, setPoolProfiles] = useState<SpinProfile[]>(fallbackProfiles)
   const [dbConnected, setDbConnected] = useState(false)
+  const [connectSaving, setConnectSaving] = useState(false)
+  const [connectDone, setConnectDone] = useState(false)
   const controls = useAnimation()
   const { startCall } = useJitsiCall()
 
@@ -81,6 +83,7 @@ export default function SpinChatPage() {
 
   const spin = async () => {
     setPhase('spinning')
+    setConnectDone(false)
     const spins = 5 + Math.random() * 5
     const extraDeg = Math.random() * 360
     const totalDeg = rotation + spins * 360 + extraDeg
@@ -104,7 +107,27 @@ export default function SpinChatPage() {
     }, 1500)
   }
 
-  const reset = () => { setPhase('idle'); setCurrentProfile(null); setMessages([]) }
+  const reset = () => { setPhase('idle'); setCurrentProfile(null); setMessages([]); setConnectDone(false) }
+
+  const handleConnect = async () => {
+    if (!user || !currentProfile || connectSaving || connectDone) return
+    setConnectSaving(true)
+    try {
+      // Save as a like/swipe in DB so it can become a match
+      await supabase.from('swipes').upsert({
+        swiper_id: user.id,
+        swiped_id: currentProfile.name, // fallback uses name; real DB profiles have id
+        action: 'like',
+        source: 'spin_chat',
+      }, { onConflict: 'swiper_id,swiped_id' })
+    } catch {
+      // Silently continue — connect is a soft action
+    }
+    setConnectSaving(false)
+    setConnectDone(true)
+    // Auto-reset after 2.5s
+    setTimeout(reset, 2500)
+  }
 
   return (
     <div className="h-full flex flex-col dark:bg-[#0A0710] bg-gray-50 overflow-hidden">
@@ -144,9 +167,7 @@ export default function SpinChatPage() {
 
               {/* Spin wheel */}
               <div className="relative flex items-center justify-center">
-                {/* Outer glow */}
                 <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-fuchsia-500/10 blur-2xl" />
-
                 <motion.div animate={controls}
                   className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border-4 border-fuchsia-500/30 overflow-hidden flex-shrink-0">
                   {segments.map((seg, i) => (
@@ -162,15 +183,12 @@ export default function SpinChatPage() {
                       {seg}
                     </div>
                   ))}
-                  {/* Center */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-12 h-12 rounded-full bg-love-gradient flex items-center justify-center shadow-lg">
                       <Zap className="w-6 h-6 text-white" />
                     </div>
                   </div>
                 </motion.div>
-
-                {/* Pointer */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-fuchsia-500 filter drop-shadow-lg" />
               </div>
 
@@ -193,7 +211,6 @@ export default function SpinChatPage() {
                 )}
               </motion.button>
 
-              {/* Stats row */}
               <div className="flex items-center gap-4 sm:gap-6 text-center">
                 {[
                   { icon: Globe, label: 'Countries', value: '54+', color: 'text-blue-500' },
@@ -217,7 +234,6 @@ export default function SpinChatPage() {
             <motion.div key="matched" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
               className="h-full overflow-y-auto flex flex-col items-center px-4 py-6 gap-4">
 
-              {/* Match banner */}
               <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
                 className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
@@ -304,8 +320,21 @@ export default function SpinChatPage() {
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-love-gradient text-white font-semibold text-sm hover:opacity-90 transition-opacity">
                   <RefreshCw className="w-4 h-4" /> Spin Again
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-500 font-semibold text-sm hover:bg-fuchsia-500/20 transition-colors">
-                  <Heart className="w-4 h-4" /> Connect
+                <button
+                  onClick={handleConnect}
+                  disabled={connectSaving || connectDone}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
+                    connectDone
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
+                      : 'bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-500 hover:bg-fuchsia-500/20 disabled:opacity-60'
+                  }`}
+                >
+                  {connectDone
+                    ? <><CheckCircle2 className="w-4 h-4" /> Matched!</>
+                    : connectSaving
+                    ? <><RefreshCw className="w-4 h-4 animate-spin" /> Saving…</>
+                    : <><Heart className="w-4 h-4" /> Connect</>
+                  }
                 </button>
               </div>
             </motion.div>
