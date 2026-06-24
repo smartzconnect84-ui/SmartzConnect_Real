@@ -1,71 +1,83 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { Globe, Trophy, Users, Zap, Calendar, MapPin, Crown, TrendingUp } from 'lucide-react'
+import { Globe, Trophy, Users, Zap, Calendar, MapPin, Crown, TrendingUp, Clock, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 
-const events = [
-  {
-    id: 1, title: 'Africa Music Battle 2025', category: 'Music', prize: '$10,000',
-    date: 'Aug 15–30, 2025', location: 'Pan-Africa (Online)', participants: 2847,
-    status: 'open', emoji: '🎵', color: 'from-pink-500 to-rose-600',
-    desc: 'The biggest African music competition. Submit your original track and let the community vote.',
-  },
-  {
-    id: 2, title: 'SmartzTV Creator Cup', category: 'Live Streaming', prize: '$5,000',
-    date: 'Sep 1–15, 2025', location: 'SmartzTV Platform', participants: 1203,
-    status: 'open', emoji: '📺', color: 'from-violet-500 to-purple-600',
-    desc: 'Compete for the most-watched live stream. Gifts, views, and engagement all count.',
-  },
-  {
-    id: 3, title: 'Pan-African Fashion Week', category: 'Fashion', prize: '$8,000',
-    date: 'Oct 5–20, 2025', location: 'Lagos + Online', participants: 934,
-    status: 'upcoming', emoji: '👗', color: 'from-amber-500 to-orange-600',
-    desc: 'Showcase African fashion to a global audience. Designers, models, and stylists welcome.',
-  },
-  {
-    id: 4, title: 'Tech Startup Pitch Africa', category: 'Tech', prize: '$25,000',
-    date: 'Nov 10, 2025', location: 'Accra, Ghana', participants: 412,
-    status: 'upcoming', emoji: '💡', color: 'from-emerald-500 to-teal-600',
-    desc: 'Pitch your startup to top African VCs and angel investors. 3-minute pitches, live judging.',
-  },
-  {
-    id: 5, title: 'African Comedy Showdown', category: 'Comedy', prize: '$3,000',
-    date: 'Jul 1–15, 2025', location: 'Online', participants: 3201,
-    status: 'ended', emoji: '😂', color: 'from-yellow-500 to-amber-600',
-    desc: 'The funniest creators on the continent compete for laughs and prizes.',
-  },
-  {
-    id: 6, title: 'SmartzConnect Dance-Off', category: 'Dance', prize: '$4,000',
-    date: 'Dec 1–20, 2025', location: 'Pan-Africa (Online)', participants: 0,
-    status: 'upcoming', emoji: '💃', color: 'from-fuchsia-500 to-pink-600',
-    desc: 'Show your moves. Afrobeats, Amapiano, Azonto — all styles welcome.',
-  },
-]
+interface WSEvent {
+  id: string
+  title: string
+  category: string
+  prize: string
+  date_range: string
+  location: string
+  participants: number
+  status: 'open' | 'upcoming' | 'ended'
+  emoji: string
+  color: string
+  description: string
+}
 
-const leaderboard = [
-  { rank: 1, name: 'Kofi Beats', country: '🇬🇭', category: 'Music', points: 48200, badge: '👑', avatar: '🎵' },
-  { rank: 2, name: 'Amara Live', country: '🇸🇱', category: 'Streaming', points: 41500, badge: '🥈', avatar: '📺' },
-  { rank: 3, name: 'Lagos Vibes', country: '🇳🇬', category: 'Comedy', points: 38900, badge: '🥉', avatar: '😂' },
-  { rank: 4, name: 'Dakar Style', country: '🇸🇳', category: 'Fashion', points: 32100, badge: '⭐', avatar: '👗' },
-  { rank: 5, name: 'Nairobi Tech', country: '🇰🇪', category: 'Tech', points: 28700, badge: '⭐', avatar: '💡' },
-  { rank: 6, name: 'Accra Dance', country: '🇬🇭', category: 'Dance', points: 24300, badge: '⭐', avatar: '💃' },
-  { rank: 7, name: 'Monrovia FC', country: '🇱🇷', category: 'Sports', points: 21800, badge: '⭐', avatar: '⚽' },
-  { rank: 8, name: 'Abidjan Art', country: '🇨🇮', category: 'Art', points: 19200, badge: '⭐', avatar: '🎨' },
-]
+interface WSLeader {
+  rank: number
+  display_name: string
+  country: string
+  category: string
+  points: number
+  avatar_emoji: string
+}
 
-const spotlights = [
-  { name: 'Kofi Beats', country: '🇬🇭 Ghana', category: 'Music', followers: '124K', quote: 'SmartzConnect World Stage gave me the platform to reach fans across 30 countries in one week.', photo: '🎵', wins: 3 },
-  { name: 'Amara Live', country: '🇸🇱 Sierra Leone', category: 'Live Streaming', followers: '89K', quote: 'I went from 200 followers to 89K in 3 months after winning the Creator Cup. This platform changed my life.', photo: '📺', wins: 2 },
-  { name: 'Fatou Fashion', country: '🇸🇳 Senegal', category: 'Fashion', followers: '67K', quote: 'African fashion deserves a global stage. SmartzConnect gave us exactly that.', photo: '👗', wins: 1 },
-]
+interface WSSpotlight {
+  id: string
+  display_name: string
+  country: string
+  category: string
+  followers_label: string
+  quote: string
+  avatar_emoji: string
+  wins: number
+}
 
-const categories = ['All', 'Music', 'Live Streaming', 'Fashion', 'Tech', 'Comedy', 'Dance']
+const categories = ['All', 'Music', 'Live Streaming', 'Fashion', 'Tech', 'Comedy', 'Dance', 'Sports']
 
 export default function WorldStagePage() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+
   const [activeCategory, setActiveCategory] = useState('All')
-  const filtered = events.filter(e => activeCategory === 'All' || e.category === activeCategory)
+  const [events, setEvents] = useState<WSEvent[]>([])
+  const [leaderboard, setLeaderboard] = useState<WSLeader[]>([])
+  const [spotlights, setSpotlights] = useState<WSSpotlight[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchAll() {
+      setLoading(true)
+      setError(null)
+      try {
+        const [evRes, lbRes, spRes] = await Promise.all([
+          supabase.from('worldstage_events').select('*').order('created_at', { ascending: false }),
+          supabase.from('worldstage_leaderboard').select('*').order('points', { ascending: false }).limit(10),
+          supabase.from('worldstage_spotlights').select('*').order('wins', { ascending: false }).limit(3),
+        ])
+        if (evRes.error) throw evRes.error
+        if (lbRes.error) throw lbRes.error
+        if (spRes.error) throw spRes.error
+        setEvents((evRes.data as WSEvent[]) || [])
+        setLeaderboard((lbRes.data as WSLeader[]) || [])
+        setSpotlights((spRes.data as WSSpotlight[]) || [])
+      } catch (e: any) {
+        setError(e?.message || 'Could not load World Stage data')
+      }
+      setLoading(false)
+    }
+    fetchAll()
+  }, [])
+
+  const filtered = activeCategory === 'All'
+    ? events
+    : events.filter(e => e.category === activeCategory)
 
   return (
     <div className="dark:bg-[#080510] bg-gray-50 min-h-screen pt-16 sm:pt-20">
@@ -95,124 +107,192 @@ export default function WorldStagePage() {
                 <TrendingUp className="w-5 h-5" /> View Leaderboard
               </a>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
-              {[{ v: '$55K+', l: 'Total Prizes' }, { v: '47', l: 'Countries' }, { v: '12K+', l: 'Competitors' }, { v: '6', l: 'Active Events' }].map(s => (
-                <div key={s.l} className="dark:bg-white/5 bg-white rounded-2xl px-4 py-3 border dark:border-white/8 border-gray-100">
-                  <p className="font-display font-black text-xl sm:text-2xl text-gradient-love">{s.v}</p>
-                  <p className="text-xs dark:text-gray-400 text-gray-500">{s.l}</p>
-                </div>
-              ))}
-            </div>
           </motion.div>
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
 
-        {/* Events */}
-        <div ref={ref} className="mb-16 sm:mb-20">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col items-center gap-3 py-24">
+            <div className="w-10 h-10 rounded-full border-2 border-brand-pink/30 border-t-brand-pink animate-spin" />
+            <p className="text-sm dark:text-gray-400 text-gray-500">Loading World Stage…</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <AlertCircle className="w-7 h-7 text-amber-400" />
+            </div>
             <div>
-              <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900">Active <span className="text-gradient-love">Competitions</span></h2>
-              <p className="dark:text-gray-400 text-gray-600 mt-1 text-sm">Enter now and compete for cash prizes</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map(cat => (
-                <button key={cat} onClick={() => setActiveCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeCategory === cat ? 'bg-love-gradient text-white shadow-md' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 hover:text-brand-pink'}`}>
-                  {cat}
-                </button>
-              ))}
+              <p className="font-bold dark:text-white text-gray-900 mb-1">Database not set up yet</p>
+              <p className="text-sm dark:text-gray-400 text-gray-500 max-w-sm">Run the World Stage SQL schema in Supabase to enable live competitions.</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((event, i) => (
-              <motion.div key={event.id} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.07 }}
-                className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-100 overflow-hidden hover:shadow-xl hover:border-pink-500/20 transition-all group">
-                <div className={`h-28 sm:h-32 bg-gradient-to-br ${event.color} relative flex items-center justify-center`}>
-                  <span className="text-5xl sm:text-6xl">{event.emoji}</span>
-                  <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${event.status === 'open' ? 'bg-emerald-500 text-white' : event.status === 'upcoming' ? 'bg-amber-500 text-white' : 'bg-gray-500 text-white'}`}>
-                    {event.status === 'open' ? '🟢 Open' : event.status === 'upcoming' ? '⏳ Soon' : '✅ Ended'}
-                  </div>
-                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs font-black">🏆 {event.prize}</div>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-bold dark:text-white text-gray-900 text-sm sm:text-base leading-tight">{event.title}</h3>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-500 flex-shrink-0">{event.category}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm dark:text-gray-400 text-gray-600 leading-relaxed mb-4">{event.desc}</p>
-                  <div className="space-y-1.5 mb-4">
-                    <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><Calendar className="w-3.5 h-3.5 flex-shrink-0" /> {event.date}</div>
-                    <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {event.location}</div>
-                    <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><Users className="w-3.5 h-3.5 flex-shrink-0" /> {event.participants > 0 ? `${event.participants.toLocaleString()} entered` : 'Be the first!'}</div>
-                  </div>
-                  <Link to="/register" className={`w-full py-2.5 rounded-xl text-sm font-bold text-center transition-all block ${event.status === 'open' ? 'bg-love-gradient text-white hover:shadow-lg hover:shadow-pink-500/25' : event.status === 'upcoming' ? 'dark:bg-white/5 bg-gray-100 dark:text-gray-300 text-gray-700 hover:text-brand-pink' : 'dark:bg-white/3 bg-gray-50 dark:text-gray-600 text-gray-400 cursor-not-allowed'}`}>
-                    {event.status === 'open' ? '🚀 Enter Now' : event.status === 'upcoming' ? '🔔 Get Notified' : '📊 View Results'}
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* Leaderboard */}
-        <div id="leaderboard" className="mb-16 sm:mb-20">
-          <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900 mb-8">Global <span className="text-gradient-love">Leaderboard</span></h2>
-          <div className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-100 overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 px-4 sm:px-6 py-3 border-b dark:border-white/5 border-gray-100 text-[10px] sm:text-xs font-black uppercase tracking-widest dark:text-gray-500 text-gray-400">
-              <div className="col-span-1">#</div>
-              <div className="col-span-7 sm:col-span-5">Creator</div>
-              <div className="col-span-3 hidden sm:block">Category</div>
-              <div className="col-span-4 sm:col-span-3 text-right">Points</div>
-            </div>
-            {leaderboard.map((entry, i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.05 }}
-                className="grid grid-cols-12 gap-2 items-center px-4 sm:px-6 py-3 sm:py-4 border-b dark:border-white/4 border-gray-50 last:border-0 hover:dark:bg-white/3 hover:bg-pink-50/30 transition-colors">
-                <div className="col-span-1 text-lg sm:text-xl">{entry.badge}</div>
-                <div className="col-span-7 sm:col-span-5 flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-base sm:text-xl flex-shrink-0">{entry.avatar}</div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-bold dark:text-white text-gray-900 truncate">{entry.name}</p>
-                    <p className="text-[10px] dark:text-gray-500 text-gray-400">{entry.country}</p>
-                  </div>
+        {!loading && !error && (
+          <>
+            {/* Events */}
+            <div ref={ref} className="mb-16 sm:mb-20">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900">Active <span className="text-gradient-love">Competitions</span></h2>
+                  <p className="dark:text-gray-400 text-gray-600 mt-1 text-sm">Enter now and compete for cash prizes</p>
                 </div>
-                <div className="col-span-3 hidden sm:block">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600">{entry.category}</span>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map(cat => (
+                    <button key={cat} onClick={() => setActiveCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeCategory === cat ? 'bg-love-gradient text-white shadow-md' : 'dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600 hover:text-brand-pink'}`}>
+                      {cat}
+                    </button>
+                  ))}
                 </div>
-                <div className="col-span-4 sm:col-span-3 text-right">
-                  <span className="font-display font-black text-sm sm:text-base text-gradient-love">{entry.points.toLocaleString()}</span>
-                  <span className="text-[10px] dark:text-gray-500 text-gray-400 ml-1">pts</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+              </div>
 
-        {/* Spotlights */}
-        <div className="mb-16 sm:mb-20">
-          <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900 mb-8">Creator <span className="text-gradient-love">Spotlights</span></h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {spotlights.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1 }}
-                className="dark:bg-[#130E1E] bg-white rounded-2xl p-6 border dark:border-white/6 border-gray-100 hover:shadow-xl hover:border-pink-500/20 transition-all">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-love-gradient flex items-center justify-center text-3xl shadow-lg shadow-pink-500/20">{s.photo}</div>
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center gap-5 py-20 text-center">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-500/15 to-purple-500/10 border border-pink-500/15 flex items-center justify-center">
+                    <Trophy className="w-9 h-9 text-brand-pink/50" />
+                  </div>
                   <div>
-                    <p className="font-bold dark:text-white text-gray-900">{s.name}</p>
-                    <p className="text-xs text-brand-pink font-semibold">{s.category}</p>
-                    <p className="text-[10px] dark:text-gray-500 text-gray-400">{s.country}</p>
+                    <p className="font-bold text-lg dark:text-white text-gray-900 mb-2">Competitions Coming Soon</p>
+                    <p className="text-sm dark:text-gray-400 text-gray-500 max-w-sm">
+                      World Stage competitions will be live during our official launch on <strong>June 26, 2026</strong>. Stay tuned!
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl dark:bg-amber-500/10 bg-amber-50 border dark:border-amber-500/20 border-amber-200">
+                    <Clock className="w-4 h-4 text-amber-500" />
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Launching June 26, 2026 · Bash Pool, Marshall Road, Liberia</span>
                   </div>
                 </div>
-                <blockquote className="text-sm dark:text-gray-300 text-gray-700 italic leading-relaxed mb-4">"{s.quote}"</blockquote>
-                <div className="flex items-center justify-between pt-3 border-t dark:border-white/5 border-gray-100">
-                  <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-brand-pink" /><span className="text-xs font-bold dark:text-white text-gray-900">{s.followers}</span><span className="text-xs dark:text-gray-500 text-gray-400">followers</span></div>
-                  <div className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-amber-500" /><span className="text-xs font-bold dark:text-white text-gray-900">{s.wins}</span><span className="text-xs dark:text-gray-500 text-gray-400">wins</span></div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filtered.map((event, i) => (
+                    <motion.div key={event.id} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.07 }}
+                      className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-100 overflow-hidden hover:shadow-xl hover:border-pink-500/20 transition-all group">
+                      <div className={`h-28 sm:h-32 bg-gradient-to-br ${event.color} relative flex items-center justify-center`}>
+                        <span className="text-5xl sm:text-6xl">{event.emoji}</span>
+                        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${event.status === 'open' ? 'bg-emerald-500 text-white' : event.status === 'upcoming' ? 'bg-amber-500 text-white' : 'bg-gray-500 text-white'}`}>
+                          {event.status === 'open' ? '🟢 Open' : event.status === 'upcoming' ? '⏳ Soon' : '✅ Ended'}
+                        </div>
+                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs font-black">🏆 {event.prize}</div>
+                      </div>
+                      <div className="p-5">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold dark:text-white text-gray-900 text-sm sm:text-base leading-tight">{event.title}</h3>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-500 flex-shrink-0">{event.category}</span>
+                        </div>
+                        <p className="text-xs sm:text-sm dark:text-gray-400 text-gray-600 leading-relaxed mb-4">{event.description}</p>
+                        <div className="space-y-1.5 mb-4">
+                          <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><Calendar className="w-3.5 h-3.5 flex-shrink-0" /> {event.date_range}</div>
+                          <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {event.location}</div>
+                          <div className="flex items-center gap-2 text-xs dark:text-gray-500 text-gray-400"><Users className="w-3.5 h-3.5 flex-shrink-0" /> {event.participants > 0 ? `${event.participants.toLocaleString()} entered` : 'Be the first!'}</div>
+                        </div>
+                        <Link to="/register" className={`w-full py-2.5 rounded-xl text-sm font-bold text-center transition-all block ${event.status === 'open' ? 'bg-love-gradient text-white hover:shadow-lg hover:shadow-pink-500/25' : event.status === 'upcoming' ? 'dark:bg-white/5 bg-gray-100 dark:text-gray-300 text-gray-700 hover:text-brand-pink' : 'dark:bg-white/3 bg-gray-50 dark:text-gray-600 text-gray-400 cursor-not-allowed'}`}>
+                          {event.status === 'open' ? '🚀 Enter Now' : event.status === 'upcoming' ? '🔔 Get Notified' : '📊 View Results'}
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+              )}
+            </div>
+
+            {/* Leaderboard */}
+            <div id="leaderboard" className="mb-16 sm:mb-20">
+              <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900 mb-8">Global <span className="text-gradient-love">Leaderboard</span></h2>
+
+              {leaderboard.length === 0 ? (
+                <div className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-100 p-12 flex flex-col items-center gap-4 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/15 flex items-center justify-center">
+                    <Crown className="w-8 h-8 text-amber-500/50" />
+                  </div>
+                  <div>
+                    <p className="font-bold dark:text-white text-gray-900 mb-1">No Rankings Yet</p>
+                    <p className="text-sm dark:text-gray-400 text-gray-500 max-w-xs">The leaderboard will populate once competitions go live. Be the first to claim your spot!</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="dark:bg-[#130E1E] bg-white rounded-2xl border dark:border-white/6 border-gray-100 overflow-hidden">
+                  <div className="grid grid-cols-12 gap-2 px-4 sm:px-6 py-3 border-b dark:border-white/5 border-gray-100 text-[10px] sm:text-xs font-black uppercase tracking-widest dark:text-gray-500 text-gray-400">
+                    <div className="col-span-1">#</div>
+                    <div className="col-span-7 sm:col-span-5">Creator</div>
+                    <div className="col-span-3 hidden sm:block">Category</div>
+                    <div className="col-span-4 sm:col-span-3 text-right">Points</div>
+                  </div>
+                  {leaderboard.map((entry, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.05 }}
+                      className="grid grid-cols-12 gap-2 items-center px-4 sm:px-6 py-3 sm:py-4 border-b dark:border-white/4 border-gray-50 last:border-0 hover:dark:bg-white/3 hover:bg-pink-50/30 transition-colors">
+                      <div className="col-span-1 text-lg sm:text-xl">
+                        {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '⭐'}
+                      </div>
+                      <div className="col-span-7 sm:col-span-5 flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full dark:bg-white/8 bg-pink-50 flex items-center justify-center text-base sm:text-xl flex-shrink-0">{entry.avatar_emoji}</div>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-bold dark:text-white text-gray-900 truncate">{entry.display_name}</p>
+                          <p className="text-[10px] dark:text-gray-500 text-gray-400">{entry.country}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-3 hidden sm:block">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full dark:bg-white/5 bg-gray-100 dark:text-gray-400 text-gray-600">{entry.category}</span>
+                      </div>
+                      <div className="col-span-4 sm:col-span-3 text-right">
+                        <span className="font-display font-black text-sm sm:text-base text-gradient-love">{entry.points.toLocaleString()}</span>
+                        <span className="text-[10px] dark:text-gray-500 text-gray-400 ml-1">pts</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Spotlights */}
+            <div className="mb-16 sm:mb-20">
+              <h2 className="font-display font-black text-2xl sm:text-3xl dark:text-white text-gray-900 mb-8">Creator <span className="text-gradient-love">Spotlights</span></h2>
+
+              {spotlights.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="dark:bg-[#130E1E] bg-white rounded-2xl p-6 border dark:border-white/6 border-gray-100 flex flex-col items-center gap-4 text-center py-10">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/15 to-purple-500/10 flex items-center justify-center">
+                        <Users className="w-7 h-7 text-brand-pink/40" />
+                      </div>
+                      <div>
+                        <p className="font-bold dark:text-white text-gray-900 text-sm mb-1">Spotlight #{i}</p>
+                        <p className="text-xs dark:text-gray-500 text-gray-400">Coming soon after launch</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  {spotlights.map((s, i) => (
+                    <motion.div key={s.id} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1 }}
+                      className="dark:bg-[#130E1E] bg-white rounded-2xl p-6 border dark:border-white/6 border-gray-100 hover:shadow-xl hover:border-pink-500/20 transition-all">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-love-gradient flex items-center justify-center text-3xl shadow-lg shadow-pink-500/20">{s.avatar_emoji}</div>
+                        <div>
+                          <p className="font-bold dark:text-white text-gray-900">{s.display_name}</p>
+                          <p className="text-xs text-brand-pink font-semibold">{s.category}</p>
+                          <p className="text-[10px] dark:text-gray-500 text-gray-400">{s.country}</p>
+                        </div>
+                      </div>
+                      <blockquote className="text-sm dark:text-gray-300 text-gray-700 italic leading-relaxed mb-4">"{s.quote}"</blockquote>
+                      <div className="flex items-center justify-between pt-3 border-t dark:border-white/5 border-gray-100">
+                        <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-brand-pink" /><span className="text-xs font-bold dark:text-white text-gray-900">{s.followers_label}</span><span className="text-xs dark:text-gray-500 text-gray-400">followers</span></div>
+                        <div className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-amber-500" /><span className="text-xs font-bold dark:text-white text-gray-900">{s.wins}</span><span className="text-xs dark:text-gray-500 text-gray-400">wins</span></div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* CTA */}
         <div className="relative rounded-3xl overflow-hidden">

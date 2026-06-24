@@ -92,19 +92,22 @@ export default function TeamPage() {
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden">
-        <div className="relative h-56 sm:h-72 md:h-80">
-          <img src="/flyer.png" alt="SmartzConnect" className="w-full h-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/85" />
+        <div className="relative h-56 sm:h-72 md:h-80 bg-gradient-to-br from-[#1a0a2e] via-[#0d0518] to-[#1d0a30]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-pink-500/20 blur-3xl" />
+            <div className="absolute top-1/4 left-1/4 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-violet-500/15 blur-3xl" />
+          </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 mb-3 sm:mb-4">
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/12 backdrop-blur-sm border border-white/20 mb-3 sm:mb-4">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-300" />
               <span className="text-xs sm:text-sm font-semibold text-white">The people behind SmartzConnect</span>
             </div>
-            <h1 className="font-display font-black text-2xl sm:text-4xl md:text-5xl text-white mb-2 sm:mb-3 drop-shadow-xl">
+            <h1 className="font-display font-black text-2xl sm:text-4xl md:text-5xl text-white mb-2 sm:mb-3">
               Built by Africans,<br />
               <span className="text-pink-300">For Africa</span>
             </h1>
-            <p className="text-sm sm:text-base text-white/80 max-w-xl px-4">
+            <p className="text-sm sm:text-base text-white/75 max-w-xl px-4">
               A passionate team from across Africa, united by a mission to connect our continent through technology.
             </p>
           </div>
@@ -291,9 +294,11 @@ export default function TeamPage() {
         )}
 
         {/* ── Join CTA ── */}
-        <div className="rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-xl">
-          <img src="/flyer.png" alt="SmartzConnect" className="absolute inset-0 w-full h-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/60" />
+        <div className="rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-2xl bg-gradient-to-br from-[#1f0d38] via-[#2d1060] to-[#1a0a2e]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-48 rounded-full bg-pink-500/20 blur-3xl" />
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-violet-500/15 blur-2xl" />
+          </div>
           <div className="relative p-6 sm:p-10 md:p-12 text-center">
             <h2 className="font-display font-black text-xl sm:text-2xl md:text-3xl text-white mb-2 sm:mb-3">Join Our Team</h2>
             <p className="text-white/80 mb-5 sm:mb-6 max-w-lg mx-auto text-xs sm:text-sm md:text-base">

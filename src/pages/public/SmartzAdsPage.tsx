@@ -41,17 +41,20 @@ export default function SmartzAdsPage() {
   return (
     <div className="min-h-screen dark:bg-[#080510] bg-gray-50">
 
-      {/* Hero with flyer */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="relative h-72 sm:h-96 lg:h-[460px]">
-          <img src="/flyer.png" alt="SmartzConnect Ads" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-pink-900/30 to-black/90" />
+        <div className="relative h-72 sm:h-96 lg:h-[460px] bg-gradient-to-br from-[#1f0818] via-[#0d0512] to-[#220a1e]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pink-600/25 blur-3xl" />
+            <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-rose-500/15 blur-3xl" />
+            <div className="absolute bottom-10 left-10 w-48 h-48 rounded-full bg-fuchsia-500/15 blur-2xl" />
+          </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/25 backdrop-blur-sm border border-pink-400/40 text-pink-200 text-sm font-bold mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/20 backdrop-blur-sm border border-pink-400/35 text-pink-200 text-sm font-bold mb-6">
                 <Megaphone className="w-4 h-4" /> SmartzAds Platform
               </div>
-              <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-5 drop-shadow-2xl">
+              <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-5">
                 Reach Africa's Most<br />
                 <span className="text-pink-300">Engaged Audience</span>
               </h1>
@@ -64,7 +67,7 @@ export default function SmartzAdsPage() {
                   <Mail className="w-4 h-4" /> Start Advertising
                 </a>
                 <Link to="/about"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 text-white font-semibold hover:bg-white/25 transition-all">
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white/12 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/22 transition-all">
                   Learn More <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
