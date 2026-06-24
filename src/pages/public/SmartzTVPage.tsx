@@ -19,27 +19,30 @@ export default function SmartzTVPage() {
   return (
     <div className="dark:bg-[#080510] bg-gray-50 min-h-screen">
 
-      {/* Hero with flyer */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="relative h-72 sm:h-96 lg:h-[500px]">
-          <img src="/flyer.png" alt="SmartzConnect TV" className="w-full h-full object-cover object-center scale-80 md:scale-100 transition-transform duration-700" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-violet-900/40 to-black/90" />
+        <div className="relative h-72 sm:h-96 lg:h-[500px] bg-gradient-to-br from-[#0e0720] via-[#120828] to-[#160a2e]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-violet-600/25 blur-3xl" />
+            <div className="absolute top-8 right-16 w-56 h-56 rounded-full bg-purple-500/20 blur-3xl" />
+            <div className="absolute bottom-8 left-16 w-44 h-44 rounded-full bg-pink-500/15 blur-2xl" />
+          </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/30 backdrop-blur-sm border border-violet-400/40 mb-5">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/20 backdrop-blur-sm border border-violet-400/35 mb-5">
               <Tv className="w-4 h-4 text-violet-300" />
               <span className="text-sm font-semibold text-violet-200">SmartzConnect TV</span>
             </div>
-            <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-4 drop-shadow-2xl">
+            <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-4">
               Africa's Live<br /><span className="text-pink-300">Streaming</span><br />Platform
             </h1>
-            <p className="text-lg text-white/80 mb-7 max-w-lg drop-shadow">
+            <p className="text-lg text-white/80 mb-7 max-w-lg">
               Go live, build your audience, and earn real money from your passion. SmartzTV is where African creators become stars.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Link to="/register" className="btn-love px-7 py-3.5 rounded-2xl text-sm font-bold inline-flex items-center gap-2">
                 <Play className="w-4 h-4" fill="white" /> Start Streaming Free
               </Link>
-              <Link to="/register" className="px-7 py-3.5 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 text-white text-sm font-semibold hover:bg-white/25 transition-all inline-flex items-center gap-2">
+              <Link to="/register" className="px-7 py-3.5 rounded-2xl bg-white/12 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold hover:bg-white/22 transition-all inline-flex items-center gap-2">
                 <Globe className="w-4 h-4" /> Watch Live Now
               </Link>
             </div>
