@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Phone, Video, MoreVertical, Send, Smile, Paperclip,
-  Mic, Image, Heart, ThumbsUp, Laugh, Check, CheckCheck, Play, Database, Flag
+  Mic, Check, CheckCheck, Play, Database, Flag, X
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -36,8 +36,22 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [voiceToast, setVoiceToast] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { startCall } = useJitsiCall()
+
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setInput(prev => prev + (prev ? ' ' : '') + `[📎 ${file.name}]`)
+    e.target.value = ''
+  }
+
+  const showVoiceToast = () => {
+    setVoiceToast(true)
+    setTimeout(() => setVoiceToast(false), 2500)
+  }
 
   const makeRoomId = (type: 'video' | 'audio') => {
     const sorted = [user?.id || 'a', id || 'b'].sort().join('-')
@@ -191,7 +205,7 @@ export default function ChatPage() {
   const person = participant
 
   return (
-    <div className="h-full flex flex-col dark:bg-[#0A0710] bg-gray-50">
+    <div className="h-full flex flex-col dark:bg-[#0A0710] bg-gray-50 relative">
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 dark:bg-[#0D0A14] bg-white border-b dark:border-white/6 border-gray-100 flex-shrink-0">
@@ -388,8 +402,34 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
+      {/* Voice note coming-soon toast */}
+      <AnimatePresence>
+        {voiceToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 dark:bg-[#1A1228] bg-white rounded-2xl shadow-xl border dark:border-white/8 border-gray-100 whitespace-nowrap"
+          >
+            <Mic className="w-4 h-4 text-brand-pink" />
+            <span className="text-xs font-semibold dark:text-white text-gray-900">Voice messages coming soon</span>
+            <button onClick={() => setVoiceToast(false)} className="dark:text-gray-500 text-gray-400 hover:text-brand-pink ml-1">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Input bar */}
       <div className="px-3 py-3 dark:bg-[#0D0A14] bg-white border-t dark:border-white/6 border-gray-100 flex-shrink-0">
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+          className="hidden"
+          onChange={handleFileAttach}
+        />
         <div className="flex items-center gap-2 dark:bg-white/5 bg-gray-100 rounded-2xl px-3 py-2">
           <button onClick={() => setShowEmoji(!showEmoji)} className="text-lg hover:scale-110 transition-transform">😊</button>
           <input
@@ -400,10 +440,18 @@ export default function ChatPage() {
             className="flex-1 bg-transparent text-sm dark:text-white text-gray-900 placeholder:dark:text-gray-500 placeholder:text-gray-400 focus:outline-none"
           />
           <div className="flex items-center gap-1">
-            <button className="dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors"
+              title="Attach file"
+            >
               <Paperclip className="w-4 h-4" />
             </button>
-            <button className="dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors">
+            <button
+              onClick={showVoiceToast}
+              className="dark:text-gray-500 text-gray-400 hover:text-brand-pink transition-colors"
+              title="Voice message (coming soon)"
+            >
               <Mic className="w-4 h-4" />
             </button>
             <button

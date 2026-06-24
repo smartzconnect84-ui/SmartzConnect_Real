@@ -1,18 +1,47 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Mic, MicOff, Video, VideoOff, PhoneOff, Minimize2,
-  Maximize2, RotateCcw, Monitor
+  Mic, MicOff, Video, VideoOff, PhoneOff, Minimize2, Maximize2
 } from 'lucide-react'
 import { useJitsiCall } from '@/contexts/JitsiCallContext'
 
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI: new (domain: string, options: Record<string, unknown>) => any
+  }
+}
+
+function loadJitsiScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.JitsiMeetExternalAPI) {
+      resolve()
+      return
+    }
+    const existing = document.getElementById('jitsi-api-script')
+    if (existing) {
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', reject)
+      return
+    }
+    const script = document.createElement('script')
+    script.id = 'jitsi-api-script'
+    script.src = 'https://meet.jit.si/external_api.js'
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
 export default function JitsiCall() {
   const { activeCall, endCall } = useJitsiCall()
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const apiRef = useRef<any>(null)
   const [muted, setMuted] = useState(false)
   const [cameraOff, setCameraOff] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [duration, setDuration] = useState(0)
+  const [apiReady, setApiReady] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -21,12 +50,73 @@ export default function JitsiCall() {
       setMuted(false)
       setCameraOff(activeCall.type === 'audio')
       setMinimized(false)
+      setApiReady(false)
       timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
     } else {
       if (timerRef.current) clearInterval(timerRef.current)
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [activeCall])
+  }, [activeCall?.roomId])
+
+  useEffect(() => {
+    if (!activeCall || !containerRef.current) return
+
+    let disposed = false
+
+    loadJitsiScript()
+      .then(() => {
+        if (disposed || !containerRef.current) return
+
+        const api = new window.JitsiMeetExternalAPI('meet.jit.si', {
+          roomName: activeCall.roomId,
+          parentNode: containerRef.current,
+          width: '100%',
+          height: '100%',
+          configOverwrite: {
+            startWithAudioMuted: false,
+            startWithVideoMuted: activeCall.type === 'audio',
+            prejoinPageEnabled: false,
+            disableDeepLinking: true,
+            toolbarButtons: ['microphone', 'camera', 'hangup', 'tileview'],
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_BRAND_WATERMARK: false,
+            SHOW_POWERED_BY: false,
+            DEFAULT_REMOTE_DISPLAY_NAME: 'SmartzConnect User',
+            APP_NAME: 'SmartzConnect',
+          },
+        })
+
+        api.on('audioMuteStatusChanged', ({ muted: m }: { muted: boolean }) => {
+          if (!disposed) setMuted(m)
+        })
+        api.on('videoMuteStatusChanged', ({ muted: m }: { muted: boolean }) => {
+          if (!disposed) setCameraOff(m)
+        })
+        api.on('readyToClose', () => {
+          if (!disposed) endCall()
+        })
+        api.on('videoConferenceJoined', () => {
+          if (!disposed) setApiReady(true)
+        })
+
+        apiRef.current = api
+      })
+      .catch(() => {
+        // Script failed to load — call cannot start
+        console.error('Jitsi script failed to load')
+      })
+
+    return () => {
+      disposed = true
+      if (apiRef.current) {
+        try { apiRef.current.dispose() } catch {}
+        apiRef.current = null
+      }
+      setApiReady(false)
+    }
+  }, [activeCall?.roomId])
 
   const formatDuration = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0')
@@ -34,30 +124,29 @@ export default function JitsiCall() {
     return `${m}:${s}`
   }
 
-  const jitsiUrl = activeCall
-    ? (() => {
-        const base = `https://meet.jit.si/${activeCall.roomId}`
-        const params = new URLSearchParams({
-          'config.startWithAudioMuted': muted ? 'true' : 'false',
-          'config.startWithVideoMuted': (activeCall.type === 'audio' || cameraOff) ? 'true' : 'false',
-          'config.prejoinPageEnabled': 'false',
-          'config.disableDeepLinking': 'true',
-          'config.toolbarButtons': JSON.stringify(['microphone', 'camera', 'hangup', 'tileview']),
-          'interfaceConfig.SHOW_JITSI_WATERMARK': 'false',
-          'interfaceConfig.SHOW_BRAND_WATERMARK': 'false',
-          'interfaceConfig.SHOW_POWERED_BY': 'false',
-          'interfaceConfig.DEFAULT_REMOTE_DISPLAY_NAME': 'SmartzConnect User',
-          'interfaceConfig.APP_NAME': 'SmartzConnect',
-        })
-        return `${base}#${params.toString()}`
-      })()
-    : ''
+  const handleToggleMute = () => {
+    if (apiRef.current) {
+      apiRef.current.executeCommand('toggleAudio')
+    }
+  }
+
+  const handleToggleCamera = () => {
+    if (apiRef.current) {
+      apiRef.current.executeCommand('toggleVideo')
+    }
+  }
+
+  const handleEndCall = () => {
+    if (apiRef.current) {
+      try { apiRef.current.executeCommand('hangup') } catch {}
+    }
+    endCall()
+  }
 
   return (
     <AnimatePresence>
       {activeCall && (
         <>
-          {/* Backdrop — only on non-minimized */}
           {!minimized && (
             <motion.div
               key="backdrop"
@@ -68,7 +157,6 @@ export default function JitsiCall() {
             />
           )}
 
-          {/* Call window */}
           <motion.div
             key="call-window"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -119,7 +207,7 @@ export default function JitsiCall() {
                 </button>
                 {!minimized && (
                   <button
-                    onClick={endCall}
+                    onClick={handleEndCall}
                     className="w-7 h-7 rounded-lg bg-red-500/20 flex items-center justify-center hover:bg-red-500/40 transition-colors"
                     title="End call"
                   >
@@ -129,22 +217,21 @@ export default function JitsiCall() {
               </div>
             </div>
 
-            {/* Jitsi iframe */}
+            {/* Jitsi container */}
             <div className={`flex-1 relative bg-black overflow-hidden ${minimized ? 'rounded-b-2xl' : ''}`}>
-              {jitsiUrl && (
-                <iframe
-                  ref={iframeRef}
-                  src={jitsiUrl}
-                  allow="camera; microphone; fullscreen; display-capture; autoplay"
-                  className="absolute inset-0 w-full h-full border-0"
-                  title="SmartzConnect Video Call"
-                />
+              <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+              {!apiReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-pink-500/30 border-t-brand-pink rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-xs text-white/60">Connecting…</p>
+                  </div>
+                </div>
               )}
-              {/* Minimized overlay */}
               {minimized && (
                 <div
                   onClick={() => setMinimized(false)}
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer group z-10"
                 >
                   <div className="text-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-xl p-2">
                     <Maximize2 className="w-5 h-5 text-white mx-auto mb-1" />
@@ -158,15 +245,16 @@ export default function JitsiCall() {
             {!minimized && (
               <div className="flex items-center justify-center gap-3 px-4 py-4 bg-black/40 backdrop-blur-sm flex-shrink-0">
                 <button
-                  onClick={() => setMuted(m => !m)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${muted ? 'bg-red-500 shadow-lg shadow-red-500/30' : 'bg-white/15 hover:bg-white/25'}`}
+                  onClick={handleToggleMute}
+                  disabled={!apiReady}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all disabled:opacity-40 ${muted ? 'bg-red-500 shadow-lg shadow-red-500/30' : 'bg-white/15 hover:bg-white/25'}`}
                   title={muted ? 'Unmute' : 'Mute'}
                 >
                   {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
                 </button>
 
                 <button
-                  onClick={endCall}
+                  onClick={handleEndCall}
                   className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center shadow-2xl shadow-red-500/50 hover:bg-red-600 transition-colors hover:scale-105 active:scale-95"
                   title="End call"
                 >
@@ -175,21 +263,12 @@ export default function JitsiCall() {
 
                 {activeCall.type === 'video' && (
                   <button
-                    onClick={() => setCameraOff(c => !c)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${cameraOff ? 'bg-red-500 shadow-lg shadow-red-500/30' : 'bg-white/15 hover:bg-white/25'}`}
+                    onClick={handleToggleCamera}
+                    disabled={!apiReady}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all disabled:opacity-40 ${cameraOff ? 'bg-red-500 shadow-lg shadow-red-500/30' : 'bg-white/15 hover:bg-white/25'}`}
                     title={cameraOff ? 'Turn camera on' : 'Turn camera off'}
                   >
                     {cameraOff ? <VideoOff className="w-5 h-5 text-white" /> : <Video className="w-5 h-5 text-white" />}
-                  </button>
-                )}
-
-                {activeCall.type === 'audio' && (
-                  <button
-                    onClick={() => iframeRef.current?.contentWindow?.location.reload()}
-                    className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors"
-                    title="Reload"
-                  >
-                    <RotateCcw className="w-5 h-5 text-white" />
                   </button>
                 )}
               </div>
@@ -198,8 +277,8 @@ export default function JitsiCall() {
             {/* Minimized end call button */}
             {minimized && (
               <button
-                onClick={endCall}
-                className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-10"
+                onClick={handleEndCall}
+                className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-20"
                 title="End call"
               >
                 <PhoneOff className="w-3.5 h-3.5 text-white" />
