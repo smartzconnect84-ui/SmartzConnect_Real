@@ -51,8 +51,8 @@ create table public.follows (
   unique(follower_id, following_id)
 );
 
-create index follows_follower_idx  on public.follows(follower_id);
-create index follows_following_idx on public.follows(following_id);
+create index if not exists follows_follower_idx  on public.follows(follower_id);
+create index if not exists follows_following_idx on public.follows(following_id);
 
 alter table public.follows enable row level security;
 
@@ -83,9 +83,9 @@ create table public.posts (
   updated_at       timestamptz not null default now()
 );
 
-create index posts_author_idx     on public.posts(author_id);
-create index posts_created_idx    on public.posts(created_at desc);
-create index posts_visibility_idx on public.posts(visibility);
+create index if not exists posts_author_idx     on public.posts(author_id);
+create index if not exists posts_created_idx    on public.posts(created_at desc);
+create index if not exists posts_visibility_idx on public.posts(visibility);
 
 alter table public.posts enable row level security;
 
@@ -103,8 +103,8 @@ create table public.post_likes (
   unique(post_id, user_id)
 );
 
-create index post_likes_post_idx on public.post_likes(post_id);
-create index post_likes_user_idx on public.post_likes(user_id);
+create index if not exists post_likes_post_idx on public.post_likes(post_id);
+create index if not exists post_likes_user_idx on public.post_likes(user_id);
 
 alter table public.post_likes enable row level security;
 
@@ -142,8 +142,8 @@ create table public.post_comments (
   updated_at  timestamptz not null default now()
 );
 
-create index post_comments_post_idx   on public.post_comments(post_id);
-create index post_comments_author_idx on public.post_comments(author_id);
+create index if not exists post_comments_post_idx   on public.post_comments(post_id);
+create index if not exists post_comments_author_idx on public.post_comments(author_id);
 
 alter table public.post_comments enable row level security;
 
@@ -201,8 +201,8 @@ create table public.stories (
   created_at   timestamptz not null default now()
 );
 
-create index stories_author_idx  on public.stories(author_id);
-create index stories_expires_idx on public.stories(expires_at);
+create index if not exists stories_author_idx  on public.stories(author_id);
+create index if not exists stories_expires_idx on public.stories(expires_at);
 
 alter table public.stories enable row level security;
 
@@ -306,9 +306,9 @@ create table public.notifications (
   created_at  timestamptz not null default now()
 );
 
-create index notifications_user_idx    on public.notifications(user_id);
-create index notifications_created_idx on public.notifications(created_at desc);
-create index notifications_unread_idx  on public.notifications(user_id, read) where not read;
+create index if not exists notifications_user_idx    on public.notifications(user_id);
+create index if not exists notifications_created_idx on public.notifications(created_at desc);
+create index if not exists notifications_unread_idx  on public.notifications(user_id, read) where not read;
 
 alter table public.notifications enable row level security;
 
@@ -336,8 +336,8 @@ create table public.group_rooms (
   created_at      timestamptz not null default now()
 );
 
-create index group_rooms_category_idx on public.group_rooms(category);
-create index group_rooms_type_idx     on public.group_rooms(type);
+create index if not exists group_rooms_category_idx on public.group_rooms(category);
+create index if not exists group_rooms_type_idx     on public.group_rooms(type);
 
 alter table public.group_rooms enable row level security;
 
@@ -354,8 +354,8 @@ create table public.group_members (
   unique(room_id, user_id)
 );
 
-create index group_members_room_idx on public.group_members(room_id);
-create index group_members_user_idx on public.group_members(user_id);
+create index if not exists group_members_room_idx on public.group_members(room_id);
+create index if not exists group_members_user_idx on public.group_members(user_id);
 
 alter table public.group_members enable row level security;
 
@@ -374,9 +374,9 @@ create table public.group_messages (
   created_at timestamptz not null default now()
 );
 
-create index group_messages_room_idx    on public.group_messages(room_id);
-create index group_messages_sender_idx  on public.group_messages(sender_id);
-create index group_messages_created_idx on public.group_messages(created_at desc);
+create index if not exists group_messages_room_idx    on public.group_messages(room_id);
+create index if not exists group_messages_sender_idx  on public.group_messages(sender_id);
+create index if not exists group_messages_created_idx on public.group_messages(created_at desc);
 
 alter table public.group_messages enable row level security;
 
@@ -429,8 +429,8 @@ create table public.subscriptions (
   created_at     timestamptz not null default now()
 );
 
-create index subscriptions_user_idx   on public.subscriptions(user_id);
-create index subscriptions_status_idx on public.subscriptions(status);
+create index if not exists subscriptions_user_idx   on public.subscriptions(user_id);
+create index if not exists subscriptions_status_idx on public.subscriptions(status);
 
 alter table public.subscriptions enable row level security;
 
@@ -462,9 +462,9 @@ create table public.marketplace_listings (
   updated_at  timestamptz not null default now()
 );
 
-create index marketplace_seller_idx   on public.marketplace_listings(seller_id);
-create index marketplace_category_idx on public.marketplace_listings(category);
-create index marketplace_status_idx   on public.marketplace_listings(status);
+create index if not exists marketplace_seller_idx   on public.marketplace_listings(seller_id);
+create index if not exists marketplace_category_idx on public.marketplace_listings(category);
+create index if not exists marketplace_status_idx   on public.marketplace_listings(status);
 
 alter table public.marketplace_listings enable row level security;
 
@@ -544,9 +544,9 @@ create table public.ride_requests (
   created_at       timestamptz not null default now()
 );
 
-create index ride_requests_rider_idx  on public.ride_requests(rider_id);
-create index ride_requests_driver_idx on public.ride_requests(driver_id);
-create index ride_requests_status_idx on public.ride_requests(status);
+create index if not exists ride_requests_rider_idx  on public.ride_requests(rider_id);
+create index if not exists ride_requests_driver_idx on public.ride_requests(driver_id);
+create index if not exists ride_requests_status_idx on public.ride_requests(status);
 
 alter table public.ride_requests enable row level security;
 
@@ -580,8 +580,8 @@ create table public.livestreams (
   created_at    timestamptz not null default now()
 );
 
-create index livestreams_creator_idx on public.livestreams(creator_id);
-create index livestreams_status_idx  on public.livestreams(status);
+create index if not exists livestreams_creator_idx on public.livestreams(creator_id);
+create index if not exists livestreams_status_idx  on public.livestreams(status);
 
 alter table public.livestreams enable row level security;
 
@@ -642,8 +642,8 @@ create table public.worldstage_entries (
   unique(event_id, user_id)
 );
 
-create index ws_entries_event_idx on public.worldstage_entries(event_id);
-create index ws_entries_user_idx  on public.worldstage_entries(user_id);
+create index if not exists ws_entries_event_idx on public.worldstage_entries(event_id);
+create index if not exists ws_entries_user_idx  on public.worldstage_entries(user_id);
 
 alter table public.worldstage_entries enable row level security;
 
